@@ -4,7 +4,7 @@ namespace Theseus
 {
     public class Path<T>
     {
-        public List<IFact<T>> Facts { get; private set; }
+        public List<IFact<T>> Sequence { get; private set; }
 
         public Path() : this(new List<IFact<T>>())
         {
@@ -12,7 +12,7 @@ namespace Theseus
 
         public Path(List<IFact<T>> facts)
         {
-            Facts = facts;
+            Sequence = facts;
         }
     }
 }

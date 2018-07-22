@@ -5,13 +5,40 @@ namespace Theseus
 {
     public class Pathfinder
     {
+        public IEnumerable<Path<T>> GetPaths<T>(IEnumerable<IFact<T>> facts, string from)
+        {
+            var nextPaths = new List<List<Navigation<T>>>();
+            var currentPaths = facts
+                .OfType<Navigation<T>>()
+                .Where(f => f.From == from)
+                .Select(f => new List<Navigation<T>> { f })
+                .ToList();
+
+            while (currentPaths.Any())
+            {
+                foreach (var path in currentPaths)
+                {
+                    var nexts = GetNextPaths(facts, path);
+                    if (nexts.Any())
+                    {
+                        nextPaths.AddRange(nexts);
+                    }
+                    else
+                    {
+                        yield return GetCompletePath(facts, path);
+                    }
+                }
+                currentPaths.Clear();
+                currentPaths.AddRange(nextPaths);
+                nextPaths.Clear();
+            }
+        }
+
         public IEnumerable<Path<T>> GetPaths<T>(IEnumerable<IFact<T>> facts, string from, string to)
         {
-            var navFacts = facts.OfType<Navigation<T>>();
-
-            var completedPaths = new List<Path<T>>();
             var nextPaths = new List<List<Navigation<T>>>();
-            var currentPaths = navFacts
+            var currentPaths = facts
+                .OfType<Navigation<T>>()
                 .Where(f => f.From == from)
                 .Select(f => new List<Navigation<T>> { f })
                 .ToList();
@@ -22,37 +49,46 @@ namespace Theseus
                 {
                     if (path.Last().To == to)
                     {
-                        var fullPath = new List<IFact<T>>();
-
-                        foreach (var navigation in path)
-                        {
-                            fullPath.AddRange(facts.OfType<BeforeLeaving<T>>().Where(f => f.State == navigation.From));
-                            fullPath.AddRange(facts.OfType<BeforeEntering<T>>().Where(f => f.State == navigation.To));
-                            fullPath.Add(navigation);
-                            fullPath.AddRange(facts.OfType<AfterLeaving<T>>().Where(f => f.State == navigation.From));
-                            fullPath.AddRange(facts.OfType<AfterEntering<T>>().Where(f => f.State == navigation.To));
-                        }
-
-                        completedPaths.Add(new Path<T>(fullPath));
+                        yield return GetCompletePath(facts, path);
                     }
                     else
                     {
-                        foreach (var nextStep in navFacts
-                            .Where(f => f.From == path.Last().To && !path.Contains(f)))
-                        {
-                            var newPath = new List<Navigation<T>>();
-                            newPath.AddRange(path);
-                            newPath.Add(nextStep);
-                            nextPaths.Add(newPath);
-                        }
+                        nextPaths.AddRange(GetNextPaths(facts, path));
                     }
                 }
                 currentPaths.Clear();
                 currentPaths.AddRange(nextPaths);
                 nextPaths.Clear();
             }
+        }
 
-            return completedPaths;
+        private IEnumerable<List<Navigation<T>>> GetNextPaths<T>(IEnumerable<IFact<T>> facts, List<Navigation<T>> pathSoFar)
+        {
+            foreach (var nextStep in facts
+                .OfType<Navigation<T>>()
+                .Where(f => f.From == pathSoFar.Last().To && !pathSoFar.Contains(f)))
+            {
+                var newPath = new List<Navigation<T>>();
+                newPath.AddRange(pathSoFar);
+                newPath.Add(nextStep);
+                yield return newPath;
+            }
+        }
+
+        private Path<T> GetCompletePath<T>(IEnumerable<IFact<T>> facts, List<Navigation<T>> pathSoFar)
+        {
+            var fullPath = new List<IFact<T>>();
+
+            foreach (var navigation in pathSoFar)
+            {
+                fullPath.AddRange(facts.OfType<BeforeLeaving<T>>().Where(f => f.State == navigation.From));
+                fullPath.AddRange(facts.OfType<BeforeEntering<T>>().Where(f => f.State == navigation.To));
+                fullPath.Add(navigation);
+                fullPath.AddRange(facts.OfType<AfterLeaving<T>>().Where(f => f.State == navigation.From));
+                fullPath.AddRange(facts.OfType<AfterEntering<T>>().Where(f => f.State == navigation.To));
+            }
+
+            return new Path<T>(fullPath);
         }
     }
 }

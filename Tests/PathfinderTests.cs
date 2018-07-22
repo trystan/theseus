@@ -23,7 +23,7 @@ namespace Tests
 
             Assert.AreEqual(1, results.Count());
             
-            Assert.AreEqual("a -> b", Describe(results.ElementAt(0).Facts));
+            Assert.AreEqual("a -> b", Describe(results.ElementAt(0).Sequence));
         }
 
         [TestMethod]
@@ -40,7 +40,7 @@ namespace Tests
 
             Assert.AreEqual(1, results.Count());
             
-            Assert.AreEqual("a -> b, b -> c, c -> d", Describe(results.ElementAt(0).Facts));
+            Assert.AreEqual("a -> b, b -> c, c -> d", Describe(results.ElementAt(0).Sequence));
         }
 
         [TestMethod]
@@ -59,11 +59,11 @@ namespace Tests
 
             Assert.AreEqual(results.Count(), 3);
 
-            Assert.AreEqual("a -> b, b -> d", Describe(results.ElementAt(0).Facts));
+            Assert.AreEqual("a -> b, b -> d", Describe(results.ElementAt(0).Sequence));
 
-            Assert.AreEqual("a -> c, c -> d", Describe(results.ElementAt(1).Facts));
+            Assert.AreEqual("a -> c, c -> d", Describe(results.ElementAt(1).Sequence));
             
-            Assert.AreEqual("a -> b, b -> c, c -> d", Describe(results.ElementAt(2).Facts));
+            Assert.AreEqual("a -> b, b -> c, c -> d", Describe(results.ElementAt(2).Sequence));
         }
 
         [TestMethod]
@@ -81,7 +81,7 @@ namespace Tests
 
             Assert.AreEqual(results.Count(), 1);
             
-            Assert.AreEqual("a -> b, b -> c, c -> d", Describe(results.ElementAt(0).Facts));
+            Assert.AreEqual("a -> b, b -> c, c -> d", Describe(results.ElementAt(0).Sequence));
         }
 
         [TestMethod]
@@ -107,9 +107,32 @@ namespace Tests
             Assert.AreEqual(results.Count(), 1);
             
             var descsription = "before entering b, a -> b, after entering b, before leaving b, before entering c, b -> c, after leaving b, after entering c";
-            Assert.AreEqual(descsription, Describe(results.ElementAt(0).Facts));
+            Assert.AreEqual(descsription, Describe(results.ElementAt(0).Sequence));
         }
+        
+        [TestMethod]
+        public void AllPaths()
+        {
+            var facts = new List<IFact<TestState>>
+            {
+                new Navigation<TestState>("a", "b"),
+                new Navigation<TestState>("a", "c"),
+                new Navigation<TestState>("b", "c"),
+                new Navigation<TestState>("c", "d"),
+                new Navigation<TestState>("b", "d"),
+                new Navigation<TestState>("d", "e"),
+            };
 
+            var results = new Pathfinder().GetPaths(facts, "a");
+
+            Assert.AreEqual(results.Count(), 3);
+
+            Assert.AreEqual("a -> b, b -> d, d -> e", Describe(results.ElementAt(0).Sequence));
+
+            Assert.AreEqual("a -> c, c -> d, d -> e", Describe(results.ElementAt(1).Sequence));
+
+            Assert.AreEqual("a -> b, b -> c, c -> d, d -> e", Describe(results.ElementAt(2).Sequence));
+        }
 
 
 

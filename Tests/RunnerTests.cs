@@ -22,11 +22,11 @@ namespace Tests
 
             new Runner().Run(context, path);
 
-            Assert.AreEqual(path.Facts.Count, context.Path.Facts.Count);
-            Assert.AreEqual(path.Facts[0], context.Path.Facts[0]);
-            Assert.AreEqual(path.Facts[1], context.Path.Facts[1]);
-            Assert.AreEqual(path.Facts[2], context.Path.Facts[2]);
-            Assert.AreEqual(path.Facts[3], context.Path.Facts[3]);
+            Assert.AreEqual(path.Sequence.Count, context.Path.Sequence.Count);
+            Assert.AreEqual(path.Sequence[0], context.Path.Sequence[0]);
+            Assert.AreEqual(path.Sequence[1], context.Path.Sequence[1]);
+            Assert.AreEqual(path.Sequence[2], context.Path.Sequence[2]);
+            Assert.AreEqual(path.Sequence[3], context.Path.Sequence[3]);
         }
 
         [TestMethod]

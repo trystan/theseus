@@ -23,7 +23,7 @@ namespace Tests
 
             Assert.AreEqual(1, results.Count());
             
-            Assert.AreEqual("a -> b", Describe(results.ElementAt(0)));
+            Assert.AreEqual("a -> b", Describe(results.ElementAt(0).Facts));
         }
 
         [TestMethod]
@@ -40,7 +40,7 @@ namespace Tests
 
             Assert.AreEqual(1, results.Count());
             
-            Assert.AreEqual("a -> b, b -> c, c -> d", Describe(results.ElementAt(0)));
+            Assert.AreEqual("a -> b, b -> c, c -> d", Describe(results.ElementAt(0).Facts));
         }
 
         [TestMethod]
@@ -59,11 +59,11 @@ namespace Tests
 
             Assert.AreEqual(results.Count(), 3);
 
-            Assert.AreEqual("a -> b, b -> d", Describe(results.ElementAt(0)));
+            Assert.AreEqual("a -> b, b -> d", Describe(results.ElementAt(0).Facts));
 
-            Assert.AreEqual("a -> c, c -> d", Describe(results.ElementAt(1)));
+            Assert.AreEqual("a -> c, c -> d", Describe(results.ElementAt(1).Facts));
             
-            Assert.AreEqual("a -> b, b -> c, c -> d", Describe(results.ElementAt(2)));
+            Assert.AreEqual("a -> b, b -> c, c -> d", Describe(results.ElementAt(2).Facts));
         }
 
         [TestMethod]
@@ -81,7 +81,7 @@ namespace Tests
 
             Assert.AreEqual(results.Count(), 1);
             
-            Assert.AreEqual("a -> b, b -> c, c -> d", Describe(results.ElementAt(0)));
+            Assert.AreEqual("a -> b, b -> c, c -> d", Describe(results.ElementAt(0).Facts));
         }
 
         [TestMethod]
@@ -107,7 +107,7 @@ namespace Tests
             Assert.AreEqual(results.Count(), 1);
             
             var descsription = "before entering b, a -> b, after entering b, before leaving b, before entering c, b -> c, after leaving b, after entering c";
-            Assert.AreEqual(descsription, Describe(results.ElementAt(0)));
+            Assert.AreEqual(descsription, Describe(results.ElementAt(0).Facts));
         }
 
 

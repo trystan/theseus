@@ -4,11 +4,11 @@ namespace Theseus
 {
     public class Runner
     {
-        public void Run<T>(Context<T> context, IEnumerable<IFact<T>> path)
+        public void Run<T>(Context<T> context, Path<T> path)
         {
-            foreach (var fact in path)
+            foreach (var fact in path.Facts)
             {
-                context.Path.Add(fact);
+                context.Path.Facts.Add(fact);
                 fact.Action(context);
             }
         }

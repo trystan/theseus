@@ -5,11 +5,11 @@ namespace Theseus
 {
     public class Pathfinder
     {
-        public IEnumerable<IEnumerable<IFact<T>>> GetPaths<T>(List<IFact<T>> facts, string from, string to)
+        public IEnumerable<Path<T>> GetPaths<T>(IEnumerable<IFact<T>> facts, string from, string to)
         {
             var navFacts = facts.OfType<Navigation<T>>();
 
-            var completedPaths = new List<IEnumerable<IFact<T>>>();
+            var completedPaths = new List<Path<T>>();
             var nextPaths = new List<List<Navigation<T>>>();
             var currentPaths = navFacts
                 .Where(f => f.From == from)
@@ -33,7 +33,7 @@ namespace Theseus
                             fullPath.AddRange(facts.OfType<AfterEntering<T>>().Where(f => f.State == navigation.To));
                         }
 
-                        completedPaths.Add(fullPath);
+                        completedPaths.Add(new Path<T>(fullPath));
                     }
                     else
                     {

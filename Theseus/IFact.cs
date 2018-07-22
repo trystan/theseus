@@ -1,19 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Theseus
 {
-    public class Context<T>
-    {
-        public List<IFact<T>> Path { get; private set; }
-        public T State { get; set; }
-    
-        public Context()
-        {
-            Path = new List<IFact<T>>();
-        }
-    }
-
     public interface IFact<T>
     {
         Action<Context<T>> Action { get; }

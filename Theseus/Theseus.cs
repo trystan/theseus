@@ -1,117 +1,103 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Theseus
 {
-    public interface IFact
+    public class Context<T>
     {
+        public List<IFact<T>> Path { get; private set; }
+        public T State { get; set; }
+    
+        public Context()
+        {
+            Path = new List<IFact<T>>();
+        }
     }
 
-    public class NavigationFact : IFact
+    public interface IFact<T>
+    {
+        Action<Context<T>> Action { get; }
+    }
+
+    public class Navigation<T> : IFact<T>
     {
         public string From { get; private set; }
         public string To { get; private set; }
+        public Action<Context<T>> Action { get; set; }
 
-        public NavigationFact(string from, string to)
+        public Navigation(string from, string to) : this(from, to, _ => { })
+        {
+        }
+
+        public Navigation(string from, string to, Action<Context<T>> action)
         {
             From = from;
             To = to;
+            Action = action;
         }
     }
 
-    public class BeforeEntering : IFact
+    public class BeforeEntering<T> : IFact<T>
     {
         public string State { get; private set; }
+        public Action<Context<T>> Action { get; set; }
 
-        public BeforeEntering(string state)
+        public BeforeEntering(string state) : this(state, _ => { })
+        {
+        }
+
+        public BeforeEntering(string state, Action<Context<T>> action)
         {
             State = state;
+            Action = action;
         }
     }
 
-    public class AfterEntering : IFact
+    public class AfterEntering<T> : IFact<T>
     {
         public string State { get; private set; }
+        public Action<Context<T>> Action { get; set; }
 
-        public AfterEntering(string state)
+        public AfterEntering(string state) : this(state, _ => { })
+        {
+        }
+
+        public AfterEntering(string state, Action<Context<T>> action)
         {
             State = state;
+            Action = action;
         }
     }
 
-    public class BeforeLeaving : IFact
+    public class BeforeLeaving<T> : IFact<T>
     {
         public string State { get; private set; }
+        public Action<Context<T>> Action { get; set; }
 
-        public BeforeLeaving(string state)
+        public BeforeLeaving(string state) : this(state, _ => { })
+        {
+        }
+
+        public BeforeLeaving(string state, Action<Context<T>> action)
         {
             State = state;
+            Action = action;
         }
     }
 
-    public class AfterLeaving : IFact
+    public class AfterLeaving<T> : IFact<T>
     {
         public string State { get; private set; }
+        public Action<Context<T>> Action { get; set; }
 
-        public AfterLeaving(string state)
+        public AfterLeaving(string state) : this(state, _ => { })
+        {
+        }
+
+        public AfterLeaving(string state, Action<Context<T>> action)
         {
             State = state;
-        }
-    }
-
-    public class Runner
-    {
-        public List<IFact> Facts { get; set; } = new List<IFact>();
-        
-        public IEnumerable<IEnumerable<IFact>> GetPaths(string from, string to)
-        {
-            var navFacts = Facts.OfType<NavigationFact>();
-
-            var completedPaths = new List<List<NavigationFact>>();
-            var nextPaths = new List<List<NavigationFact>>();
-            var currentPaths = navFacts
-                .Where(f => f.From == from)
-                .Select(f => new List<NavigationFact> { f })
-                .ToList();
-
-            while (currentPaths.Any())
-            {
-                foreach (var path in currentPaths)
-                {
-                    if (path.Last().To == to)
-                    {
-                        completedPaths.Add(path);
-                    }
-                    else
-                    {
-                        foreach (var nextStep in navFacts
-                            .Where(f => f.From == path.Last().To && !path.Contains(f)))
-                        {
-                            var newPath = new List<NavigationFact>();
-                            newPath.AddRange(path);
-                            newPath.Add(nextStep);
-                            nextPaths.Add(newPath);
-                        }
-                    }
-                }
-                currentPaths.Clear();
-                currentPaths.AddRange(nextPaths);
-                nextPaths.Clear();
-            }
-
-            return completedPaths.Select(path => path.SelectMany(AddAssertions));
-        }
-        
-        IEnumerable<IFact> AddAssertions(NavigationFact navigation)
-        {
-            var parts = new List<IFact>();
-            parts.AddRange(Facts.OfType<BeforeLeaving>().Where(f => f.State == navigation.From));
-            parts.AddRange(Facts.OfType<BeforeEntering>().Where(f => f.State == navigation.To));
-            parts.Add(navigation);
-            parts.AddRange(Facts.OfType<AfterLeaving>().Where(f => f.State == navigation.From));
-            parts.AddRange(Facts.OfType<AfterEntering>().Where(f => f.State == navigation.To));
-            return parts;
+            Action = action;
         }
     }
 }

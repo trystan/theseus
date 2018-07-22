@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Theseus", "Theseus\Theseus.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{694BA33E-BA92-4F2D-99FB-AFBC253D6BF4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Console", "Console\Console.csproj", "{CBF60A2E-F5F9-45C1-92C6-35A2A2234D40}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,10 +21,6 @@ Global
 		{694BA33E-BA92-4F2D-99FB-AFBC253D6BF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{694BA33E-BA92-4F2D-99FB-AFBC253D6BF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{694BA33E-BA92-4F2D-99FB-AFBC253D6BF4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CBF60A2E-F5F9-45C1-92C6-35A2A2234D40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CBF60A2E-F5F9-45C1-92C6-35A2A2234D40}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CBF60A2E-F5F9-45C1-92C6-35A2A2234D40}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CBF60A2E-F5F9-45C1-92C6-35A2A2234D40}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -13,6 +13,7 @@ namespace Example
         public void CanNavigateToPublisherPage()
         {
             var runner = new Runner<IWebDriver>(BoardGameGeek.Facts);
+            runner.AddFactsFrom<BoardGameGeek>();
 
             using (var driver = new ChromeDriver("C:\\Program Files (x86)"))
             {
@@ -24,6 +25,7 @@ namespace Example
         public void CanNavigateToArtistPage()
         {
             var runner = new Runner<IWebDriver>(BoardGameGeek.Facts);
+            runner.AddFactsFrom(System.Reflection.Assembly.GetExecutingAssembly());
 
             using (var driver = new ChromeDriver("C:\\Program Files (x86)"))
             {

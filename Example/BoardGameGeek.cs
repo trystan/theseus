@@ -9,7 +9,13 @@ namespace Example
     {
         public static List<IFact<IWebDriver>> Facts { get; private set; } = new List<IFact<IWebDriver>>
         {
-            new Navigation<IWebDriver>("home", "search results", context => {
+            new BeforeEntering<IWebDriver>("start", context =>
+            {
+                context.State
+                    .Navigate()
+                    .GoToUrl("http://www.boardgamegeek.com/");
+            }),
+            new Navigation<IWebDriver>("start", "search results", context => {
                 context.State
                     .FindElement(By.Id("sitesearch"))
                     .SendKeys("terraforming mars\n");

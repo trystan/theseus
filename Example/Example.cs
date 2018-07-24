@@ -2,6 +2,7 @@ using OpenQA.Selenium.Chrome;
 using Theseus;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using OpenQA.Selenium;
 
 namespace Example
 {
@@ -11,30 +12,22 @@ namespace Example
         [TestMethod]
         public void CanNavigateToPublisherPage()
         {
-            var shortestPath = new Pathfinder().GetPaths(BoardGameGeek.Facts, "home", "publisher")
-                .OrderBy(path => path.Sequence.Count)
-                .First();
-           
+            var runner = new Runner<IWebDriver>(BoardGameGeek.Facts);
+
             using (var driver = new ChromeDriver("C:\\Program Files (x86)"))
             {
-                driver.Navigate().GoToUrl("http://www.boardgamegeek.com/");
-
-                new Runner().Run(driver, shortestPath);
+                runner.RunShortestPath(driver, "start", "publisher");
             }
         }
 
         [TestMethod]
         public void CanNavigateToArtistPage()
         {
-            var shortestPath = new Pathfinder().GetPaths(BoardGameGeek.Facts, "home", "artist")
-                .OrderBy(path => path.Sequence.Count)
-                .First();
+            var runner = new Runner<IWebDriver>(BoardGameGeek.Facts);
 
             using (var driver = new ChromeDriver("C:\\Program Files (x86)"))
             {
-                driver.Navigate().GoToUrl("http://www.boardgamegeek.com/");
-
-                new Runner().Run(driver, shortestPath);
+                runner.RunShortestPath(driver, "start", "artist");
             }
         }
     }

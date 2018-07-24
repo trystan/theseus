@@ -6,11 +6,17 @@ This is still very alpha.
 
 ## Example
 
+First tell Theseus how to use your site. Here are some facts about how to use
+the Selenium `IWebDriver` to use boardgamegeek.com.
 ```c#
-// Tell Theseus how to use your site. Here are facts about how to use the
-// Selenium IWebDriver to use boardgamegeek.com
-List<IFact<IWebDriver>> facts = new List<IFact<IWebDriver>>
+var facts = new List<IFact<IWebDriver>>
 {
+    new BeforeEntering<IWebDriver>("home", context =>
+    {
+        context.State
+            .Navigate()
+            .GoToUrl("http://www.boardgamegeek.com/");
+    }),
     new Navigation<IWebDriver>("home", "search results", context => {
         context.State
             .FindElement(By.Id("sitesearch"))
@@ -21,29 +27,44 @@ List<IFact<IWebDriver>> facts = new List<IFact<IWebDriver>>
             .FindElement(By.Id("results_objectname1"))
             .Click();
     }),
+    // etc
+};
+```
+
+Then use the Theseus Runner class to navigate.
+
+```c#
+[TestMethod]
+void ArtistPageShouldHaveDescription() 
+{
+    var runner = new Runner<IWebDriver>(facts);
+     
+    using (var driver = new ChromeDriver())
+    {
+        // Arrange
+        runner.RunShortestPath(driver, "start", "artist");
+
+        // Act
+
+        // Assert
+        var descriptionSection = driver.FindElements(By.Id("editdesc")).SingleOrDefault();
+        Assert.IsNotNull(descriptionSection);
+    }
+}
+```
+
+Or create facts about your system that Theseus will check for you when navigating.
+
+```c#
     new AfterEntering<IWebDriver>("game", context =>
     {
         var registerLinkCount = context.State
             .FindElements(By.CssSelector("a[href='/register']"))
             .Count;
-        Assert.AreEqual(1, registerLinkCount, "There should be one register link on a game's page");
+        Assert.AreEqual(1, registerLinkCount,	"There should be one register link on a game's page");
     }),
-    // etc
-};
-
-// Then ask Theseus how to do something.
-var shortestPath = new Pathfinder().GetPaths(facts, "home", "publisher")
-    .OrderBy(path => path.Sequence.Count)
-    .First();
-
-// Then tell Theseus to do it. (this is not yet integrated into the Visual Studio test runner)
-using (var driver = new ChromeDriver("C:\\Program Files (x86)"))
-{
-    driver.Navigate().GoToUrl("http://www.boardgamegeek.com/");
-
-    new Runner().Run(driver, shortestPath);
-}
 ```
+
 
 There's a more in-depth example in the Example project.
 
@@ -57,23 +78,34 @@ assertions, data, states, how to navigate, how to do domain actions, etc all sep
 them for you.
 
 
-## To use
-First you create a collection of facts about your system that describe how to use your applciation as well
-as how you expect it to work. 
+## Facts
 
-Navigation
+Facts describe your system as a state machine.
 
-BeforeEntering
+```c#
+Navigation(string fromStateName, string toStateName, Action<Context<T>> action)
+```
 
-BeforeLeaving
+```c#
+BeforeEntering(string stateName, Action<Context<T>> action)
+```
 
-AfterEntering
+```c#
+BeforeLeaving(string stateName, Action<Context<T>> action)
+```
 
-AfterLeaving
+```c#
+AfterEntering(string stateName, Action<Context<T>> action)
+```
 
+```c#
+AfterLeaving(string stateName, Action<Context<T>> action)
+```
 
 ## TODO
 Theseus is still a very new project so there's a lot to be done.
+
+Better documentation and examples.
 
 Handle AssertionFailedException and add better messages.
 
@@ -84,6 +116,19 @@ Integrate with Selenium.
  * You can use the selenium IWebDriver as the state to your facts. Maybe there's a better way to do this though?
 
 Use attributes to create facts from methods and classes?
+```c#
+[Navigate("login","main")]
+public void SkipLoginStep(IWebDriver driver)
+{
+    driver.FindElementById("skip").Click();
+}
+
+[AfterEntering("home")]
+public void HomePageShouldSayHelloUserName(IWebDriver driver)
+{
+    Assert.AreEqual("Hello Trystan", driver.FindElementById("welcome").Text);
+}
+```
 
 Create a visual graph from a set of facts.
 

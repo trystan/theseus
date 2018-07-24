@@ -6,7 +6,7 @@ using Theseus;
 namespace Tests
 {
     [TestClass]
-    public class PathfinderTests
+    public class PathFinderTests
     {
         class TestState { }
 
@@ -19,7 +19,7 @@ namespace Tests
                 new Navigation<TestState>("a", "c"),
             };
 
-            var results = new Pathfinder().GetPaths(facts, "a", "b");
+            var results = new PathFinder().GetPaths(facts, "a", "b");
 
             Assert.AreEqual(1, results.Count());
             
@@ -36,7 +36,7 @@ namespace Tests
                 new Navigation<TestState>("c", "d"),
             };
 
-            var results = new Pathfinder().GetPaths(facts, "a", "d");
+            var results = new PathFinder().GetPaths(facts, "a", "d");
 
             Assert.AreEqual(1, results.Count());
             
@@ -55,7 +55,7 @@ namespace Tests
                 new Navigation<TestState>("b", "d"),
             };
 
-            var results = new Pathfinder().GetPaths(facts, "a", "d");
+            var results = new PathFinder().GetPaths(facts, "a", "d");
 
             Assert.AreEqual(results.Count(), 3);
 
@@ -77,7 +77,7 @@ namespace Tests
                 new Navigation<TestState>("c", "d"),
             };
 
-            var results = new Pathfinder().GetPaths(facts, "a", "d");
+            var results = new PathFinder().GetPaths(facts, "a", "d");
 
             Assert.AreEqual(results.Count(), 1);
             
@@ -102,14 +102,32 @@ namespace Tests
                 new AfterLeaving<TestState>("c"),
             };
 
-            var results = new Pathfinder().GetPaths(facts, "a", "c");
+            var results = new PathFinder().GetPaths(facts, "a", "c");
         
             Assert.AreEqual(results.Count(), 1);
             
             var descsription = "before entering b, a -> b, after entering b, before leaving b, before entering c, b -> c, after leaving b, after entering c";
             Assert.AreEqual(descsription, Describe(results.ElementAt(0).Sequence));
         }
-        
+
+        [TestMethod]
+        public void BeforeEverything()
+        {
+            var facts = new List<IFact<TestState>>
+            {
+                new Navigation<TestState>("a", "b"),
+                new Navigation<TestState>("b", "c"),
+                new BeforeEntering<TestState>("a"),
+            };
+
+            var results = new PathFinder().GetPaths(facts, "a", "c");
+
+            Assert.AreEqual(results.Count(), 1);
+
+            var descsription = "before entering a, a -> b, b -> c";
+            Assert.AreEqual(descsription, Describe(results.ElementAt(0).Sequence));
+        }
+
         [TestMethod]
         public void AllPaths()
         {
@@ -123,7 +141,7 @@ namespace Tests
                 new Navigation<TestState>("d", "e"),
             };
 
-            var results = new Pathfinder().GetPaths(facts, "a");
+            var results = new PathFinder().GetPaths(facts, "a");
 
             Assert.AreEqual(results.Count(), 3);
 

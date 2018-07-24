@@ -5,7 +5,7 @@ using Theseus;
 namespace Tests
 {
     [TestClass]
-    public class RunnerTests
+    public class PathRunnerTests
     {
         [TestMethod]
         public void KeepTrackOfPath()
@@ -20,7 +20,7 @@ namespace Tests
 
             var context = new Context<int> { State = 0 };
 
-            new Runner().Run(context, path);
+            new PathRunner().Run(context, path);
 
             Assert.AreEqual(path.Sequence.Count, context.Path.Sequence.Count);
             Assert.AreEqual(path.Sequence[0], context.Path.Sequence[0]);
@@ -42,7 +42,7 @@ namespace Tests
 
             var context = new Context<int> { State = 0 };
 
-            new Runner().Run(context, path);
+            new PathRunner().Run(context, path);
 
             Assert.AreEqual(12, context.State);
         }

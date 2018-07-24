@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Theseus
 {
-    public class Pathfinder
+    public class PathFinder
     {
         public IEnumerable<Path<T>> GetPaths<T>(IEnumerable<IFact<T>> facts, string from)
         {
@@ -78,6 +78,8 @@ namespace Theseus
         private Path<T> GetCompletePath<T>(IEnumerable<IFact<T>> facts, List<Navigation<T>> pathSoFar)
         {
             var fullPath = new List<IFact<T>>();
+            
+            fullPath.AddRange(facts.OfType<BeforeEntering<T>>().Where(f => f.State == pathSoFar.First().From));
 
             foreach (var navigation in pathSoFar)
             {

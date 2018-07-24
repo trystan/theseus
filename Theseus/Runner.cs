@@ -1,26 +1,34 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Theseus
 {
-    public class Runner
+    public class Runner<T>
     {
-        public T Run<T>(T initialState, Path<T> path)
+        public IEnumerable<IFact<T>> Facts { get; private set; }
+        public PathRunner PathRunner { get; private set; }
+        public PathFinder Pathfinder { get; private set; }
+
+        public Runner(IEnumerable<IFact<T>> facts) : this(facts, new PathFinder(), new PathRunner())
         {
-            var context = new Context<T> { State = initialState };
-
-            Run(context, path);
-
-            return context.State;
         }
 
-        public void Run<T>(Context<T> context, Path<T> path)
+        public Runner(IEnumerable<IFact<T>> facts, PathFinder pathFinder, PathRunner pathRunner)
         {
-            foreach (var fact in path.Sequence)
-            {
-                context.Path.Sequence.Add(fact);
-                fact.Action(context);
-            }
+            Facts = facts;
+            Pathfinder = pathFinder;
+            PathRunner = pathRunner;
+        }
+
+        public T RunShortestPath(T initialState, string from, string to)
+        {
+            return PathRunner.Run(initialState, GetShortestPath(from, to));
+        }
+        
+        public Path<T> GetShortestPath(string from, string to)
+        {
+            return Pathfinder.GetPaths(Facts, from, to).OrderBy(p => p.Sequence.Count).First();
         }
     }
 }

@@ -1,91 +1,122 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Theseus
 {
     public interface IFact<T>
     {
-        Action<Context<T>> Action { get; }
+        Func<Context<T>,Task> Action { get; }
     }
 
     public class Navigation<T> : IFact<T>
     {
         public string From { get; private set; }
         public string To { get; private set; }
-        public Action<Context<T>> Action { get; set; }
+        public Func<Context<T>,Task> Action { get; set; }
 
-        public Navigation(string from, string to) : this(from, to, _ => { })
-        {
-        }
-
-        public Navigation(string from, string to, Action<Context<T>> action)
+        public Navigation(string from, string to)
         {
             From = from;
             To = to;
-            Action = action;
+            Action = _ => Task.CompletedTask;
+        }
+
+        public static Navigation<T> WithAction(string from, string to, Action<Context<T>> action)
+        {
+            return new Navigation<T>(from, to) { Action = ctx => { action(ctx); return Task.CompletedTask; } };
+        }
+
+        public static Navigation<T> WithAsyncFunc(string from, string to, Func<Context<T>,Task> action)
+        {
+            return new Navigation<T>(from, to) { Action = action };
         }
     }
 
     public class BeforeEntering<T> : IFact<T>
     {
         public string State { get; private set; }
-        public Action<Context<T>> Action { get; set; }
-
-        public BeforeEntering(string state) : this(state, _ => { })
-        {
-        }
-
-        public BeforeEntering(string state, Action<Context<T>> action)
+        public Func<Context<T>,Task> Action { get; set; }
+        
+        public BeforeEntering(string state)
         {
             State = state;
-            Action = action;
+            Action = _ => Task.CompletedTask;
+        }
+
+        public static BeforeEntering<T> WithAction(string state, Action<Context<T>> action)
+        {
+            return new BeforeEntering<T>(state) { Action = ctx => { action(ctx); return Task.CompletedTask; } };
+        }
+
+        public static BeforeEntering<T> WithAsyncFunc(string state, Func<Context<T>,Task> action)
+        {
+            return new BeforeEntering<T>(state) { Action = action };
         }
     }
 
     public class AfterEntering<T> : IFact<T>
     {
         public string State { get; private set; }
-        public Action<Context<T>> Action { get; set; }
+        public Func<Context<T>,Task> Action { get; set; }
 
-        public AfterEntering(string state) : this(state, _ => { })
-        {
-        }
-
-        public AfterEntering(string state, Action<Context<T>> action)
+        public AfterEntering(string state)
         {
             State = state;
-            Action = action;
+            Action = _ => Task.CompletedTask;
+        }
+
+        public static AfterEntering<T> WithAction(string state, Action<Context<T>> action)
+        {
+            return new AfterEntering<T>(state) { Action = ctx => { action(ctx); return Task.CompletedTask; } };
+        }
+
+        public static AfterEntering<T> WithAsyncFunc(string state, Func<Context<T>,Task> action)
+        {
+            return new AfterEntering<T>(state) { Action = action };
         }
     }
 
     public class BeforeLeaving<T> : IFact<T>
     {
         public string State { get; private set; }
-        public Action<Context<T>> Action { get; set; }
+        public Func<Context<T>,Task> Action { get; set; }
 
-        public BeforeLeaving(string state) : this(state, _ => { })
-        {
-        }
-
-        public BeforeLeaving(string state, Action<Context<T>> action)
+        public BeforeLeaving(string state)
         {
             State = state;
-            Action = action;
+            Action = _ => Task.CompletedTask;
+        }
+
+        public static BeforeLeaving<T> WithAction(string state, Action<Context<T>> action)
+        {
+            return new BeforeLeaving<T>(state) { Action = ctx => { action(ctx); return Task.CompletedTask; } };
+        }
+
+        public static BeforeLeaving<T> WithAsyncFunc(string state, Func<Context<T>,Task> action)
+        {
+            return new BeforeLeaving<T>(state) { Action = action };
         }
     }
 
     public class AfterLeaving<T> : IFact<T>
     {
         public string State { get; private set; }
-        public Action<Context<T>> Action { get; set; }
+        public Func<Context<T>,Task> Action { get; set; }
 
-        public AfterLeaving(string state) : this(state, _ => { })
-        {
-        }
-
-        public AfterLeaving(string state, Action<Context<T>> action)
+        public AfterLeaving(string state)
         {
             State = state;
-            Action = action;
+            Action = _ => Task.CompletedTask;
+        }
+
+        public static AfterLeaving<T> WithAction(string state, Action<Context<T>> action)
+        {
+            return new AfterLeaving<T>(state) { Action = ctx => { action(ctx); return Task.CompletedTask; } };
+        }
+
+        public static AfterLeaving<T> WithAsyncFunc(string state, Func<Context<T>,Task> action)
+        {
+            return new AfterLeaving<T>(state) { Action = action };
         }
     }
 }

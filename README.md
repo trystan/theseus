@@ -9,7 +9,7 @@ This is still very alpha.
 First, use attributes to tell Theseus how to use your site. Here are some facts 
 about how to use the Selenium `IWebDriver` to use boardgamegeek.com. Each fact 
 is a single-parameter method that takes the type you're using or a Theseus `Context` 
-that wraps whatever type you're using.
+that wraps whatever type you're using. The return type can be `void` or `Task`.
 
 ```c#
 public class BoardGameGeek
@@ -21,9 +21,10 @@ public class BoardGameGeek
     }
 
     [Navigation("game", "artist")]
-    public void ClickOnGameArtist(IWebDriver driver)
+    public Task ClickOnGameArtist(IWebDriver driver)
     {
         driver.FindElement(By.CssSelector("a[href^='/boardgameartist']")).Click();
+        return Task.CompletedTask;
     }
 
     [Navigation("game", "publisher")]
@@ -38,17 +39,17 @@ Or, you can create instances of facts directly.
 ```c#
 var facts = new List<IFact<IWebDriver>>
 {
-    new Navigation<IWebDriver>("start", "search results", context => {
+    Navigation<IWebDriver>.WithAction("start", "search results", context => {
         context.State
             .FindElement(By.Id("sitesearch"))
             .SendKeys("terraforming mars\n");
     }),
-    new Navigation<IWebDriver>("search results", "game", context => {
+    Navigation<IWebDriver>.WithAction("search results", "game", context => {
         context.State
             .FindElement(By.Id("results_objectname1"))
             .Click();
     }),
-    new Navigation<IWebDriver>("game", "designer", context => {
+    Navigation<IWebDriver>.WithAction("game", "designer", context => {
         context.State
             .FindElement(By.CssSelector("a[href^='/boardgamedesigner']"))
             .Click();
@@ -69,7 +70,7 @@ void ArtistPageShouldHaveDescription()
     using (var driver = new ChromeDriver())
     {
         // Arrange
-        runner.RunShortestPath(driver, "start", "artist");
+        await runner.RunShortestPath(driver, "start", "artist");
 
         // Act
 

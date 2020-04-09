@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Theseus;
 
@@ -10,7 +11,7 @@ namespace Tests
     public class FactFinderTests
     {
         [TestMethod]
-        public void FindsNavigationFacts()
+        public async Task FindsNavigationFacts()
         {
             var assembly = System.Reflection.Assembly.GetAssembly(typeof(AttributeTestClass));
             var facts = new FactFinder().FindFacts<Logger>(assembly)
@@ -19,23 +20,29 @@ namespace Tests
 
             var logger = new Logger();
 
-            Assert.AreEqual(2, facts.Count);
+            Assert.AreEqual(3, facts.Count);
 
             var fact1 = facts[0];
             Assert.AreEqual("a", fact1.From);
             Assert.AreEqual("b", fact1.To);
-            fact1.Action(new Context<Logger> { State = logger });
+            await fact1.Action(new Context<Logger> { State = logger });
             Assert.AreEqual("TestNavigationLoggerContext was called", logger.Messages[0]);
 
             var fact2 = facts[1];
             Assert.AreEqual("a", fact2.From);
             Assert.AreEqual("b", fact2.To);
-            fact2.Action(new Context<Logger> { State = logger });
+            await fact2.Action(new Context<Logger> { State = logger });
             Assert.AreEqual("TestNavigationLogger was called", logger.Messages[1]);
+
+            var fact3 = facts[2];
+            Assert.AreEqual("a", fact2.From);
+            Assert.AreEqual("b", fact2.To);
+            await fact3.Action(new Context<Logger> { State = logger });
+            Assert.AreEqual("TestAsyncNavigationLogger was called", logger.Messages[2]);
         }
 
         [TestMethod]
-        public void FindsAfterEnteringFacts()
+        public async Task FindsAfterEnteringFacts()
         {
             var assembly = System.Reflection.Assembly.GetAssembly(typeof(AttributeTestClass));
             var facts = new FactFinder().FindFacts<Logger>(assembly)
@@ -44,21 +51,26 @@ namespace Tests
 
             var logger = new Logger();
 
-            Assert.AreEqual(2, facts.Count);
+            Assert.AreEqual(3, facts.Count);
 
             var fact1 = facts[0];
             Assert.AreEqual("a", fact1.State);
-            fact1.Action(new Context<Logger> { State = logger });
+            await fact1.Action(new Context<Logger> { State = logger });
             Assert.AreEqual("TestNavigationLoggerContext was called", logger.Messages[0]);
 
             var fact2 = facts[1];
             Assert.AreEqual("a", fact2.State);
-            fact2.Action(new Context<Logger> { State = logger });
+            await fact2.Action(new Context<Logger> { State = logger });
             Assert.AreEqual("TestNavigationLogger was called", logger.Messages[1]);
+
+            var fact3 = facts[2];
+            Assert.AreEqual("a", fact2.State);
+            await fact3.Action(new Context<Logger> { State = logger });
+            Assert.AreEqual("TestAsyncNavigationLogger was called", logger.Messages[2]);
         }
 
         [TestMethod]
-        public void FindsBeforeEnteringFacts()
+        public async Task FindsBeforeEnteringFacts()
         {
             var assembly = System.Reflection.Assembly.GetAssembly(typeof(AttributeTestClass));
             var facts = new FactFinder().FindFacts<Logger>(assembly)
@@ -67,21 +79,26 @@ namespace Tests
 
             var logger = new Logger();
 
-            Assert.AreEqual(2, facts.Count);
+            Assert.AreEqual(3, facts.Count);
 
             var fact1 = facts[0];
             Assert.AreEqual("a", fact1.State);
-            fact1.Action(new Context<Logger> { State = logger });
+            await fact1.Action(new Context<Logger> { State = logger });
             Assert.AreEqual("TestNavigationLoggerContext was called", logger.Messages[0]);
 
             var fact2 = facts[1];
             Assert.AreEqual("a", fact2.State);
-            fact2.Action(new Context<Logger> { State = logger });
+            await fact2.Action(new Context<Logger> { State = logger });
             Assert.AreEqual("TestNavigationLogger was called", logger.Messages[1]);
+
+            var fact3 = facts[2];
+            Assert.AreEqual("a", fact2.State);
+            await fact3.Action(new Context<Logger> { State = logger });
+            Assert.AreEqual("TestAsyncNavigationLogger was called", logger.Messages[2]);
         }
 
         [TestMethod]
-        public void FindsAfterLeavingFacts()
+        public async Task FindsAfterLeavingFacts()
         {
             var assembly = System.Reflection.Assembly.GetAssembly(typeof(AttributeTestClass));
             var facts = new FactFinder().FindFacts<Logger>(assembly)
@@ -90,21 +107,26 @@ namespace Tests
 
             var logger = new Logger();
 
-            Assert.AreEqual(2, facts.Count);
+            Assert.AreEqual(3, facts.Count);
 
             var fact1 = facts[0];
             Assert.AreEqual("a", fact1.State);
-            fact1.Action(new Context<Logger> { State = logger });
+            await fact1.Action(new Context<Logger> { State = logger });
             Assert.AreEqual("TestNavigationLoggerContext was called", logger.Messages[0]);
 
             var fact2 = facts[1];
             Assert.AreEqual("a", fact2.State);
-            fact2.Action(new Context<Logger> { State = logger });
+            await fact2.Action(new Context<Logger> { State = logger });
             Assert.AreEqual("TestNavigationLogger was called", logger.Messages[1]);
+
+            var fact3 = facts[2];
+            Assert.AreEqual("a", fact2.State);
+            await fact3.Action(new Context<Logger> { State = logger });
+            Assert.AreEqual("TestAsyncNavigationLogger was called", logger.Messages[2]);
         }
 
         [TestMethod]
-        public void FindsBeforeLeavingFacts()
+        public async Task FindsBeforeLeavingFacts()
         {
             var assembly = System.Reflection.Assembly.GetAssembly(typeof(AttributeTestClass));
             var facts = new FactFinder().FindFacts<Logger>(assembly)
@@ -113,17 +135,22 @@ namespace Tests
 
             var logger = new Logger();
 
-            Assert.AreEqual(2, facts.Count);
+            Assert.AreEqual(3, facts.Count);
 
             var fact1 = facts[0];
             Assert.AreEqual("a", fact1.State);
-            fact1.Action(new Context<Logger> { State = logger });
+            await fact1.Action(new Context<Logger> { State = logger });
             Assert.AreEqual("TestNavigationLoggerContext was called", logger.Messages[0]);
 
             var fact2 = facts[1];
             Assert.AreEqual("a", fact2.State);
-            fact2.Action(new Context<Logger> { State = logger });
+            await fact2.Action(new Context<Logger> { State = logger });
             Assert.AreEqual("TestNavigationLogger was called", logger.Messages[1]);
+
+            var fact3 = facts[2];
+            Assert.AreEqual("a", fact2.State);
+            await fact3.Action(new Context<Logger> { State = logger });
+            Assert.AreEqual("TestAsyncNavigationLogger was called", logger.Messages[2]);
         }
     }
 
@@ -163,6 +190,17 @@ namespace Tests
         public void TestNavigationLogger(Logger logger)
         {
             logger.Log("TestNavigationLogger was called");
+        }
+
+        [Navigation("a", "b")]
+        [AfterEntering("a")]
+        [BeforeEntering("a")]
+        [AfterLeaving("a")]
+        [BeforeLeaving("a")]
+        public Task TestAsyncNavigationLogger(Logger logger)
+        {
+            logger.Log("TestAsyncNavigationLogger was called");
+            return Task.CompletedTask;
         }
 
         [Navigation("a", "b")]

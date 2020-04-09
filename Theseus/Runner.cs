@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Theseus
 {
@@ -38,7 +39,7 @@ namespace Theseus
             Facts.AddRange(FactFinder.FindFacts<T>(typeof(S)));
         }
 
-        public T RunShortestPath(T initialState, string from, string to)
+        public Task<T> RunShortestPath(T initialState, string from, string to)
         {
             var path = GetShortestPath(from, to);
             if (path == null)

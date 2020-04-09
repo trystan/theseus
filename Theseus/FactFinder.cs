@@ -10,6 +10,7 @@ namespace Theseus
     {
         public string From { get; private set; }
         public string To { get; private set; }
+        public string[] Requires { get; set; } = new string[0];
 
         public NavigationAttribute(string from, string to)
         {
@@ -77,10 +78,10 @@ namespace Theseus
             foreach (var method in type.GetMethods().Where(m => m.GetParameters().Length == 1))
             {
                 Handle<T, NavigationAttribute>(type, method,
-                    (attribute, instance) => facts.Add(Navigation<T>.WithAction(attribute.From, attribute.To, context => method.Invoke(instance, new object[] { context }))),
-                    (attribute, instance) => facts.Add(Navigation<T>.WithAction(attribute.From, attribute.To, context => method.Invoke(instance, new object[] { context.State }))),
-                    (attribute, instance) => facts.Add(Navigation<T>.WithAsyncFunc(attribute.From, attribute.To, context => (Task)method.Invoke(instance, new object[] { context }))),
-                    (attribute, instance) => facts.Add(Navigation<T>.WithAsyncFunc(attribute.From, attribute.To, context => (Task)method.Invoke(instance, new object[] { context.State }))));
+                    (attribute, instance) => facts.Add(Navigation<T>.WithAction(attribute.From, attribute.To, context => method.Invoke(instance, new object[] { context }), attribute.Requires)),
+                    (attribute, instance) => facts.Add(Navigation<T>.WithAction(attribute.From, attribute.To, context => method.Invoke(instance, new object[] { context.State }), attribute.Requires)),
+                    (attribute, instance) => facts.Add(Navigation<T>.WithAsyncFunc(attribute.From, attribute.To, context => (Task)method.Invoke(instance, new object[] { context }), attribute.Requires)),
+                    (attribute, instance) => facts.Add(Navigation<T>.WithAsyncFunc(attribute.From, attribute.To, context => (Task)method.Invoke(instance, new object[] { context.State }), attribute.Requires)));
 
                 Handle<T, AfterEnteringAttribute>(type, method,
                     (attribute, instance) => facts.Add(AfterEntering<T>.WithAction(attribute.State, context => method.Invoke(instance, new object[] { context }))),

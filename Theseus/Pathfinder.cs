@@ -66,7 +66,9 @@ namespace Theseus
         {
             foreach (var nextStep in facts
                 .OfType<Navigation<T>>()
-                .Where(f => f.From == pathSoFar.Last().To && !pathSoFar.Contains(f)))
+                .Where(f => !pathSoFar.Contains(f) 
+                    && (f.From == pathSoFar.Last().To || f.From == "*")
+                    && (f.Requires == null || f.Requires.All(r => pathSoFar.Any(p => p.From == r || p.To == r)))))
             {
                 var newPath = new List<Navigation<T>>();
                 newPath.AddRange(pathSoFar);
@@ -81,13 +83,15 @@ namespace Theseus
             
             fullPath.AddRange(facts.OfType<BeforeEntering<T>>().Where(f => f.State == pathSoFar.First().From));
 
+            var previousState = pathSoFar.First().From;
             foreach (var navigation in pathSoFar)
             {
-                fullPath.AddRange(facts.OfType<BeforeLeaving<T>>().Where(f => f.State == navigation.From));
+                fullPath.AddRange(facts.OfType<BeforeLeaving<T>>().Where(f => f.State == previousState));
                 fullPath.AddRange(facts.OfType<BeforeEntering<T>>().Where(f => f.State == navigation.To));
                 fullPath.Add(navigation);
-                fullPath.AddRange(facts.OfType<AfterLeaving<T>>().Where(f => f.State == navigation.From));
+                fullPath.AddRange(facts.OfType<AfterLeaving<T>>().Where(f => f.State == previousState));
                 fullPath.AddRange(facts.OfType<AfterEntering<T>>().Where(f => f.State == navigation.To));
+                previousState = navigation.To;
             }
 
             return new Path<T>(fullPath);

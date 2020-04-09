@@ -111,6 +111,31 @@ namespace Tests
         }
 
         [TestMethod]
+        public void BeforeAndAfterStar()
+        {
+            var facts = new List<IFact<TestState>>
+            {
+                new Navigation<TestState>("a", "b"),
+                new Navigation<TestState>("*", "z"),
+                new BeforeEntering<TestState>("b"),
+                new BeforeLeaving<TestState>("b"),
+                new AfterEntering<TestState>("b"),
+                new AfterLeaving<TestState>("b"),
+                new BeforeEntering<TestState>("z"),
+                new BeforeLeaving<TestState>("z"),
+                new AfterEntering<TestState>("z"),
+                new AfterLeaving<TestState>("z"),
+            };
+
+            var results = new PathFinder().GetPaths(facts, "a", "z");
+        
+            Assert.AreEqual(results.Count(), 1);
+            
+            var descsription = "before entering b, a -> b, after entering b, before leaving b, before entering z, * -> z, after leaving b, after entering z";
+            Assert.AreEqual(descsription, Describe(results.ElementAt(0).Sequence));
+        }
+
+        [TestMethod]
         public void BeforeEverything()
         {
             var facts = new List<IFact<TestState>>

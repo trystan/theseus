@@ -12,23 +12,26 @@ namespace Theseus
     {
         public string From { get; private set; }
         public string To { get; private set; }
+        public string[] Requires { get; private set; } 
+
         public Func<Context<T>,Task> Action { get; set; }
 
-        public Navigation(string from, string to)
+        public Navigation(string from, string to, string[] requires = null)
         {
             From = from;
             To = to;
+            Requires = requires;
             Action = _ => Task.CompletedTask;
         }
 
-        public static Navigation<T> WithAction(string from, string to, Action<Context<T>> action)
+        public static Navigation<T> WithAction(string from, string to, Action<Context<T>> action, string[] requires = null)
         {
-            return new Navigation<T>(from, to) { Action = ctx => { action(ctx); return Task.CompletedTask; } };
+            return new Navigation<T>(from, to, requires) { Action = ctx => { action(ctx); return Task.CompletedTask; } };
         }
 
-        public static Navigation<T> WithAsyncFunc(string from, string to, Func<Context<T>,Task> action)
+        public static Navigation<T> WithAsyncFunc(string from, string to, Func<Context<T>,Task> action, string[] requires = null)
         {
-            return new Navigation<T>(from, to) { Action = action };
+            return new Navigation<T>(from, to, requires) { Action = action };
         }
     }
 

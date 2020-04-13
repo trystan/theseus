@@ -59,8 +59,47 @@ namespace Theseus
         }
     }
 
+    public interface ILabelMaker
+    {
+        string MakeLabel(MethodInfo method);
+    }
+
+    public class DefaultLabelmaker : ILabelMaker
+    {
+        public string MakeLabel(MethodInfo method)
+        {
+            var label = "";
+            foreach (var c in method.Name.Replace('_', ' '))
+            {
+                if (char.IsUpper(c) && (label.Length == 0 || !char.IsUpper(label.Last())))
+                    label += ' ';
+                
+                label += c;
+            }
+            var words = label.Split(' ');
+            label = "";
+            foreach (var word in words)
+            {
+                if (label == "")
+                    label = word;
+                else if (word.All(char.IsUpper))
+                    label += " " + word;
+                else
+                    label += " " + word.ToLower();
+            }
+            return label.Trim();
+        }
+    }
+
     public class FactFinder
     {
+        private readonly ILabelMaker _labelMaker;
+
+        public FactFinder(ILabelMaker labelMaker)
+        {
+            _labelMaker = labelMaker;
+        }
+
         public IEnumerable<IFact<T>> FindFacts<T>(Assembly assembly)
         {
             var facts = new List<IFact<T>>();
@@ -77,80 +116,84 @@ namespace Theseus
 
             foreach (var method in type.GetMethods().Where(m => m.GetParameters().Length == 1))
             {
-                Handle<T, NavigationAttribute>(type, method,
-                    (attribute, instance) => facts.Add(Navigation<T>.WithAction(attribute.From, attribute.To, context => method.Invoke(instance, new object[] { context }), attribute.Requires)),
-                    (attribute, instance) => facts.Add(Navigation<T>.WithAction(attribute.From, attribute.To, context => method.Invoke(instance, new object[] { context.State }), attribute.Requires)),
-                    (attribute, instance) => facts.Add(Navigation<T>.WithAsyncFunc(attribute.From, attribute.To, context => (Task)method.Invoke(instance, new object[] { context }), attribute.Requires)),
-                    (attribute, instance) => facts.Add(Navigation<T>.WithAsyncFunc(attribute.From, attribute.To, context => (Task)method.Invoke(instance, new object[] { context.State }), attribute.Requires)));
+                Handle<T, NavigationAttribute>(facts, type, method,
+                    (attribute, instance) => Navigation<T>.WithAction(attribute.From, attribute.To, context => method.Invoke(instance, new object[] { context }), attribute.Requires),
+                    (attribute, instance) => Navigation<T>.WithAction(attribute.From, attribute.To, context => method.Invoke(instance, new object[] { context.State }), attribute.Requires),
+                    (attribute, instance) => Navigation<T>.WithAsyncFunc(attribute.From, attribute.To, context => (Task)method.Invoke(instance, new object[] { context }), attribute.Requires),
+                    (attribute, instance) => Navigation<T>.WithAsyncFunc(attribute.From, attribute.To, context => (Task)method.Invoke(instance, new object[] { context.State }), attribute.Requires));
 
-                Handle<T, AfterEnteringAttribute>(type, method,
-                    (attribute, instance) => facts.Add(AfterEntering<T>.WithAction(attribute.State, context => method.Invoke(instance, new object[] { context }))),
-                    (attribute, instance) => facts.Add(AfterEntering<T>.WithAction(attribute.State, context => method.Invoke(instance, new object[] { context.State }))),
-                    (attribute, instance) => facts.Add(AfterEntering<T>.WithAsyncFunc(attribute.State, context => (Task)method.Invoke(instance, new object[] { context }))),
-                    (attribute, instance) => facts.Add(AfterEntering<T>.WithAsyncFunc(attribute.State, context => (Task)method.Invoke(instance, new object[] { context.State }))));
+                Handle<T, AfterEnteringAttribute>(facts, type, method,
+                    (attribute, instance) => AfterEntering<T>.WithAction(attribute.State, context => method.Invoke(instance, new object[] { context })),
+                    (attribute, instance) => AfterEntering<T>.WithAction(attribute.State, context => method.Invoke(instance, new object[] { context.State })),
+                    (attribute, instance) => AfterEntering<T>.WithAsyncFunc(attribute.State, context => (Task)method.Invoke(instance, new object[] { context })),
+                    (attribute, instance) => AfterEntering<T>.WithAsyncFunc(attribute.State, context => (Task)method.Invoke(instance, new object[] { context.State })));
 
-                Handle<T, BeforeEnteringAttribute>(type, method,
-                    (attribute, instance) => facts.Add(BeforeEntering<T>.WithAction(attribute.State, context => method.Invoke(instance, new object[] { context }))),
-                    (attribute, instance) => facts.Add(BeforeEntering<T>.WithAction(attribute.State, context => method.Invoke(instance, new object[] { context.State }))),
-                    (attribute, instance) => facts.Add(BeforeEntering<T>.WithAsyncFunc(attribute.State, context => (Task)method.Invoke(instance, new object[] { context }))),
-                    (attribute, instance) => facts.Add(BeforeEntering<T>.WithAsyncFunc(attribute.State, context => (Task)method.Invoke(instance, new object[] { context.State }))));
+                Handle<T, BeforeEnteringAttribute>(facts, type, method,
+                    (attribute, instance) => BeforeEntering<T>.WithAction(attribute.State, context => method.Invoke(instance, new object[] { context })),
+                    (attribute, instance) => BeforeEntering<T>.WithAction(attribute.State, context => method.Invoke(instance, new object[] { context.State })),
+                    (attribute, instance) => BeforeEntering<T>.WithAsyncFunc(attribute.State, context => (Task)method.Invoke(instance, new object[] { context })),
+                    (attribute, instance) => BeforeEntering<T>.WithAsyncFunc(attribute.State, context => (Task)method.Invoke(instance, new object[] { context.State })));
 
-                Handle<T, AfterLeavingAttribute>(type, method,
-                    (attribute, instance) => facts.Add(AfterLeaving<T>.WithAction(attribute.State, context => method.Invoke(instance, new object[] { context }))),
-                    (attribute, instance) => facts.Add(AfterLeaving<T>.WithAction(attribute.State, context => method.Invoke(instance, new object[] { context.State }))),
-                    (attribute, instance) => facts.Add(AfterLeaving<T>.WithAsyncFunc(attribute.State, context => (Task)method.Invoke(instance, new object[] { context }))),
-                    (attribute, instance) => facts.Add(AfterLeaving<T>.WithAsyncFunc(attribute.State, context => (Task)method.Invoke(instance, new object[] { context.State }))));
+                Handle<T, AfterLeavingAttribute>(facts, type, method,
+                    (attribute, instance) => AfterLeaving<T>.WithAction(attribute.State, context => method.Invoke(instance, new object[] { context })),
+                    (attribute, instance) => AfterLeaving<T>.WithAction(attribute.State, context => method.Invoke(instance, new object[] { context.State })),
+                    (attribute, instance) => AfterLeaving<T>.WithAsyncFunc(attribute.State, context => (Task)method.Invoke(instance, new object[] { context })),
+                    (attribute, instance) => AfterLeaving<T>.WithAsyncFunc(attribute.State, context => (Task)method.Invoke(instance, new object[] { context.State })));
 
-                Handle<T, BeforeLeavingAttribute>(type, method,
-                    (attribute, instance) => facts.Add(BeforeLeaving<T>.WithAction(attribute.State, context => method.Invoke(instance, new object[] { context }))),
-                    (attribute, instance) => facts.Add(BeforeLeaving<T>.WithAction(attribute.State, context => method.Invoke(instance, new object[] { context.State }))),
-                    (attribute, instance) => facts.Add(BeforeLeaving<T>.WithAsyncFunc(attribute.State, context => (Task)method.Invoke(instance, new object[] { context }))),
-                    (attribute, instance) => facts.Add(BeforeLeaving<T>.WithAsyncFunc(attribute.State, context => (Task)method.Invoke(instance, new object[] { context.State }))));
+                Handle<T, BeforeLeavingAttribute>(facts, type, method,
+                    (attribute, instance) => BeforeLeaving<T>.WithAction(attribute.State, context => method.Invoke(instance, new object[] { context })),
+                    (attribute, instance) => BeforeLeaving<T>.WithAction(attribute.State, context => method.Invoke(instance, new object[] { context.State })),
+                    (attribute, instance) => BeforeLeaving<T>.WithAsyncFunc(attribute.State, context => (Task)method.Invoke(instance, new object[] { context })),
+                    (attribute, instance) => BeforeLeaving<T>.WithAsyncFunc(attribute.State, context => (Task)method.Invoke(instance, new object[] { context.State })));
             }
 
             return facts;
         }
 
-        private void Handle<T,A>(Type type, MethodInfo method,
-                Action<A, object> withContext,
-                Action<A, object> withoutContext,
-                Action<A, object> asyncWithContext,
-                Action<A, object> asyncWithoutContext)
+        private void Handle<T,A>(List<IFact<T>> facts, Type type, MethodInfo method,
+                Func<A, object, IFact<T>> withContext,
+                Func<A, object, IFact<T>> withoutContext,
+                Func<A, object, IFact<T>> asyncWithContext,
+                Func<A, object, IFact<T>> asyncWithoutContext)
             where A : Attribute
         {
             var innerParameterType = typeof(T);
             var contextParameterType = typeof(Context<T>);
+            var label = _labelMaker.MakeLabel(method);
 
-            if (method.GetCustomAttributes(typeof(A), false).Length > 0)
+            foreach (A attribute in method.GetCustomAttributes(typeof(A), false))
             {
+                var instance = type.GetConstructor(new Type[0]).Invoke(new object[0]);
+                var parameterType = method.GetParameters().First().ParameterType;
+
                 if (method.ReturnType == typeof(Task))
                 {
-                    if (method.GetParameters().First().ParameterType == contextParameterType)
+                    if (parameterType == contextParameterType)
                     {
-                        var instance = type.GetConstructor(new Type[0]).Invoke(new object[0]);
-                        var attribute = method.GetCustomAttribute(typeof(A), false) as A;
-                        asyncWithContext(attribute, instance);
+                        var fact = asyncWithContext(attribute, instance);
+                        fact.Label = label;
+                        facts.Add(fact);
                     }
-                    else if (method.GetParameters().First().ParameterType == innerParameterType)
+                    else if (parameterType == innerParameterType)
                     {
-                        var instance = type.GetConstructor(new Type[0]).Invoke(new object[0]);
-                        var attribute = method.GetCustomAttribute(typeof(A), false) as A;
-                        asyncWithoutContext(attribute, instance);
+                        var fact = asyncWithoutContext(attribute, instance);
+                        fact.Label = label;
+                        facts.Add(fact);
                     }
                 }
                 else
                 {
-                    if (method.GetParameters().First().ParameterType == contextParameterType)
+                    if (parameterType == contextParameterType)
                     {
-                        var instance = type.GetConstructor(new Type[0]).Invoke(new object[0]);
-                        var attribute = method.GetCustomAttribute(typeof(A), false) as A;
-                        withContext(attribute, instance);
+                        var fact = withContext(attribute, instance);
+                        fact.Label = label;
+                        facts.Add(fact);
                     }
-                    else if (method.GetParameters().First().ParameterType == innerParameterType)
+                    else if (parameterType == innerParameterType)
                     {
-                        var instance = type.GetConstructor(new Type[0]).Invoke(new object[0]);
-                        var attribute = method.GetCustomAttribute(typeof(A), false) as A;
-                        withoutContext(attribute, instance);
+                        var fact = withoutContext(attribute, instance);
+                        fact.Label = label;
+                        facts.Add(fact);
                     }
                 }
             }

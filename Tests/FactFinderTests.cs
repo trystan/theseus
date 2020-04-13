@@ -14,7 +14,7 @@ namespace Tests
         public async Task FindsNavigationFacts()
         {
             var assembly = System.Reflection.Assembly.GetAssembly(typeof(AttributeTestClass));
-            var facts = new FactFinder().FindFacts<Logger>(assembly)
+            var facts = new FactFinder(new DefaultLabelmaker()).FindFacts<Logger>(assembly)
                 .OfType<Navigation<Logger>>()
                 .ToList();
 
@@ -45,7 +45,7 @@ namespace Tests
         public async Task FindsAfterEnteringFacts()
         {
             var assembly = System.Reflection.Assembly.GetAssembly(typeof(AttributeTestClass));
-            var facts = new FactFinder().FindFacts<Logger>(assembly)
+            var facts = new FactFinder(new DefaultLabelmaker()).FindFacts<Logger>(assembly)
                 .OfType<AfterEntering<Logger>>()
                 .ToList();
 
@@ -73,7 +73,7 @@ namespace Tests
         public async Task FindsBeforeEnteringFacts()
         {
             var assembly = System.Reflection.Assembly.GetAssembly(typeof(AttributeTestClass));
-            var facts = new FactFinder().FindFacts<Logger>(assembly)
+            var facts = new FactFinder(new DefaultLabelmaker()).FindFacts<Logger>(assembly)
                 .OfType<BeforeEntering<Logger>>()
                 .ToList();
 
@@ -101,7 +101,7 @@ namespace Tests
         public async Task FindsAfterLeavingFacts()
         {
             var assembly = System.Reflection.Assembly.GetAssembly(typeof(AttributeTestClass));
-            var facts = new FactFinder().FindFacts<Logger>(assembly)
+            var facts = new FactFinder(new DefaultLabelmaker()).FindFacts<Logger>(assembly)
                 .OfType<AfterLeaving<Logger>>()
                 .ToList();
 
@@ -129,7 +129,7 @@ namespace Tests
         public async Task FindsBeforeLeavingFacts()
         {
             var assembly = System.Reflection.Assembly.GetAssembly(typeof(AttributeTestClass));
-            var facts = new FactFinder().FindFacts<Logger>(assembly)
+            var facts = new FactFinder(new DefaultLabelmaker()).FindFacts<Logger>(assembly)
                 .OfType<BeforeLeaving<Logger>>()
                 .ToList();
 

@@ -5,11 +5,13 @@ namespace Theseus
 {
     public interface IFact<T>
     {
+        string Label { get; set; }
         Func<Context<T>,Task> Action { get; }
     }
 
     public class Navigation<T> : IFact<T>
     {
+        public string Label { get; set; }
         public string From { get; private set; }
         public string To { get; private set; }
         public string[] Requires { get; private set; } 
@@ -37,6 +39,7 @@ namespace Theseus
 
     public class BeforeEntering<T> : IFact<T>
     {
+        public string Label { get; set; }
         public string State { get; private set; }
         public Func<Context<T>,Task> Action { get; set; }
         
@@ -59,6 +62,7 @@ namespace Theseus
 
     public class AfterEntering<T> : IFact<T>
     {
+        public string Label { get; set; }
         public string State { get; private set; }
         public Func<Context<T>,Task> Action { get; set; }
 
@@ -81,6 +85,7 @@ namespace Theseus
 
     public class BeforeLeaving<T> : IFact<T>
     {
+        public string Label { get; set; }
         public string State { get; private set; }
         public Func<Context<T>,Task> Action { get; set; }
 
@@ -103,6 +108,7 @@ namespace Theseus
 
     public class AfterLeaving<T> : IFact<T>
     {
+        public string Label { get; set; }
         public string State { get; private set; }
         public Func<Context<T>,Task> Action { get; set; }
 

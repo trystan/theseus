@@ -13,11 +13,11 @@ namespace Theseus
         public PathRunner PathRunner { get; private set; }
         public PathFinder Pathfinder { get; private set; }
 
-        public Runner() : this(new List<IFact<T>>(), new FactFinder(), new PathFinder(), new PathRunner())
+        public Runner() : this(new List<IFact<T>>(), new FactFinder(new DefaultLabelmaker()), new PathFinder(), new PathRunner())
         {
         }
 
-        public Runner(List<IFact<T>> facts) : this(facts, new FactFinder(), new PathFinder(), new PathRunner())
+        public Runner(List<IFact<T>> facts) : this(facts, new FactFinder(new DefaultLabelmaker()), new PathFinder(), new PathRunner())
         {
         }
 

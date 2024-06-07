@@ -3,6 +3,27 @@ interface NavigationFact {
   to: string
 }
 
+class FluentStuff {
+  facts: NavigationFact[]
+
+  constructor(facts: NavigationFact[]) {
+    this.facts = facts
+  }
+
+  toNavigate() {
+    const facts = this.facts
+    return {
+      from(fromState: string) {
+        return {
+          to(toState: string) {
+            facts.push({ from: fromState, to: toState})
+          }
+        }
+      }
+    }
+  }
+}
+
 const facts: NavigationFact[] = [
   { from: 'a', to: 'b' },
   { from: 'b', to: 'l1' },
@@ -12,12 +33,14 @@ const facts: NavigationFact[] = [
   { from: 'c', to: 'd' },
   { from: 'd', to: 'l2' },
   { from: 'd', to: 'r2' },
-  { from: 'l2', to: 'e' },
-  { from: 'r2', to: 'e' },
-  { from: 'l2', to: 'z1' },
-  { from: 'r2', to: 'z2' },
-  { from: 'e', to: 'z' },
 ]
+
+const sut = new FluentStuff(facts)
+sut.toNavigate().from('l2').to('e')
+sut.toNavigate().from('r2').to('e')
+sut.toNavigate().from('l2').to('z1')
+sut.toNavigate().from('r2').to('z2')
+sut.toNavigate().from('e').to('z')
 
 const toGraphvizInput = (facts: NavigationFact[]): string => {
   const describeEdge = (n: NavigationFact) => {

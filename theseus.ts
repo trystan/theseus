@@ -36,16 +36,32 @@ const toGraphvizInput = (facts: NavigationFact[]): string => {
   return `digraph { \n${facts.map(describeEdge).join('\n') }\n}`
 }
 
-const getAllPathsFrom = (facts: NavigationFact[], from: string, path: NavigationFact[] = []): NavigationFact[][] => {
-  const nextSteps = facts.filter(f => f.from === from && !path.includes(f))
-  if (nextSteps.length === 0) {
-    if (path.length) {
-      return [path]
+const getAllPaths = (facts: NavigationFact[], from: string, to: string | null): NavigationFact[][] => {
+  const helper = (facts: NavigationFact[], from: string, to: string | null, path: NavigationFact[]): NavigationFact[][] => {
+    if (to && path.length && path[path.length - 1].to === to) return [path]
+
+    const nextSteps = facts.filter(f => f.from === from && !path.includes(f))
+    if (nextSteps.length === 0) {
+      if (path.length && (to === null || path[path.length - 1].to === to)) {
+        return [path]
+      } else {
+        return []
+      }
     } else {
-      return []
+      return nextSteps.flatMap(next => helper(facts, next.to, to, [...path, next]))
     }
+  }
+  return helper(facts, from, to, [])
+}
+
+const getShortestPath = (facts: NavigationFact[], from: string, to: string | null): NavigationFact[] | undefined => {
+  const paths = getAllPaths(facts, from, to)
+    .map<[number, NavigationFact[]]>(p => [p.length, p])
+    .sort()
+  if (paths.length) {
+    return paths[0][1]
   } else {
-    return nextSteps.flatMap(next => getAllPathsFrom(facts, next.to, [...path, next]))
+    return undefined
   }
 }
 
@@ -75,4 +91,6 @@ sut.toNavigate().from('e').to('z').do(() => { })
 
 // console.log(toGraphvizInput(facts))
 
-console.log(describePath(getAllPathsFrom(facts, 'a')[0]))
+// console.log(describePath(getAllPaths(facts, 'a', 'r2')[0])
+
+console.log(describePath(getShortestPath(facts, 'a', 'r2')!))

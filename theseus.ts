@@ -1,6 +1,7 @@
 interface NavigationFact {
   from: string
   to: string
+  do: () => void
 }
 
 class FluentStuff {
@@ -16,31 +17,17 @@ class FluentStuff {
       from(fromState: string) {
         return {
           to(toState: string) {
-            facts.push({ from: fromState, to: toState})
+            return {
+              do(fn: () => void) {
+                facts.push({ from: fromState, to: toState, do: fn })
+              }
+            }
           }
         }
       }
     }
   }
 }
-
-const facts: NavigationFact[] = [
-  { from: 'a', to: 'b' },
-  { from: 'b', to: 'l1' },
-  { from: 'b', to: 'r1' },
-  { from: 'l1', to: 'c' },
-  { from: 'r1', to: 'c' },
-  { from: 'c', to: 'd' },
-  { from: 'd', to: 'l2' },
-  { from: 'd', to: 'r2' },
-]
-
-const sut = new FluentStuff(facts)
-sut.toNavigate().from('l2').to('e')
-sut.toNavigate().from('r2').to('e')
-sut.toNavigate().from('l2').to('z1')
-sut.toNavigate().from('r2').to('z2')
-sut.toNavigate().from('e').to('z')
 
 const toGraphvizInput = (facts: NavigationFact[]): string => {
   const describeEdge = (n: NavigationFact) => {
@@ -49,6 +36,43 @@ const toGraphvizInput = (facts: NavigationFact[]): string => {
   return `digraph { \n${facts.map(describeEdge).join('\n') }\n}`
 }
 
+const getAllPathsFrom = (facts: NavigationFact[], from: string, path: NavigationFact[] = []): NavigationFact[][] => {
+  const nextSteps = facts.filter(f => f.from === from && !path.includes(f))
+  if (nextSteps.length === 0) {
+    if (path.length) {
+      return [path]
+    } else {
+      return []
+    }
+  } else {
+    return nextSteps.flatMap(next => getAllPathsFrom(facts, next.to, [...path, next]))
+  }
+}
+
+const describePath = (path: NavigationFact[]): string => {
+  return path.map(f => `${f.from} -> ${f.to}`).join('\n')
+}
+
 // -- run -- //
 
-console.log(toGraphvizInput(facts))
+const facts: NavigationFact[] = [
+  { from: 'a', to: 'b', do: () => { } },
+  { from: 'b', to: 'l1', do: () => { } },
+  { from: 'b', to: 'r1', do: () => { } },
+  { from: 'l1', to: 'c', do: () => { } },
+  { from: 'r1', to: 'c', do: () => { } },
+  { from: 'c', to: 'd', do: () => { } },
+  { from: 'd', to: 'l2', do: () => { } },
+  { from: 'd', to: 'r2', do: () => { } },
+]
+
+const sut = new FluentStuff(facts)
+sut.toNavigate().from('l2').to('e').do(() => { })
+sut.toNavigate().from('r2').to('e').do(() => { })
+sut.toNavigate().from('l2').to('z1').do(() => { })
+sut.toNavigate().from('r2').to('z2').do(() => { })
+sut.toNavigate().from('e').to('z').do(() => { })
+
+// console.log(toGraphvizInput(facts))
+
+console.log(describePath(getAllPathsFrom(facts, 'a')[0]))

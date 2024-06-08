@@ -1,10 +1,12 @@
 interface NavigationFact<TUserState> {
+  name?: string
   from: string
   to: string
   do: (state: TUserState) => void
 }
 
 interface ExpectationFact<TUserState> {
+  name?: string
   at: string
   do: (state: TUserState) => void
 }
@@ -13,8 +15,10 @@ type Fact<TUserState> = NavigationFact<TUserState> | ExpectationFact<TUserState>
 
 interface Facts<TUserState> {
   navigation: NavigationFact<TUserState>[]
+  before: ExpectationFact<TUserState>[]
   beforeEntering: ExpectationFact<TUserState>[]
   beforeExiting: ExpectationFact<TUserState>[]
+  after: ExpectationFact<TUserState>[]
   afterEntering: ExpectationFact<TUserState>[]
   afterExiting: ExpectationFact<TUserState>[]
 }
@@ -24,6 +28,71 @@ class FluentStuff<TUserState> {
 
   constructor(facts: Facts<TUserState>) {
     this.facts = facts
+  }
+
+  to(name: string) {
+    const facts = this.facts
+    return {
+      from(fromState: string) {
+        return {
+          to(toState: string) {
+            return {
+              do(fn: (state: TUserState) => void) {
+                facts.navigation.push({ name, from: fromState, to: toState, do: fn })
+              }
+            }
+          }
+        }
+      },
+    
+      before(navigation: string) {
+        return {
+          do(fn: (state: TUserState) => void) {
+            facts.before.push({ name, at: navigation, do: fn })
+          }
+        }
+      },
+
+      beforeEntering(state: string) {
+        return {
+          do(fn: (state: TUserState) => void) {
+            facts.beforeEntering.push({ name, at: state, do: fn })
+          }
+        }
+      },
+      
+      beforeExiting(state: string) {
+        return {
+          do(fn: (state: TUserState) => void) {
+            facts.beforeExiting.push({ name, at: state, do: fn })
+          }
+        }
+      },
+      
+      after(navigation: string) {
+        return {
+          do(fn: (state: TUserState) => void) {
+            facts.after.push({ name, at: navigation, do: fn })
+          }
+        }
+      },
+
+      afterEntering(state: string) {
+        return {
+          do(fn: (state: TUserState) => void) {
+            facts.afterEntering.push({ name, at: state, do: fn })
+          }
+        }
+      },
+
+      afterExiting(state: string) {
+        return {
+          do(fn: (state: TUserState) => void) {
+            facts.afterExiting.push({ name, at: state, do: fn })
+          }
+        }
+      }
+    }
   }
 
   toNavigate() {
@@ -43,6 +112,15 @@ class FluentStuff<TUserState> {
     }
   }
   
+  before(navigation: string) {
+    const facts = this.facts
+    return {
+      do(fn: (state: TUserState) => void) {
+        facts.before.push({ at: navigation, do: fn })
+      }
+    }
+  }
+
   beforeEntering(state: string) {
     const facts = this.facts
     return {
@@ -57,6 +135,15 @@ class FluentStuff<TUserState> {
     return {
       do(fn: (state: TUserState) => void) {
         facts.beforeExiting.push({ at: state, do: fn })
+      }
+    }
+  }
+
+  after(navigation: string) {
+    const facts = this.facts
+    return {
+      do(fn: (state: TUserState) => void) {
+        facts.after.push({ at: navigation, do: fn })
       }
     }
   }
@@ -111,8 +198,16 @@ const getShortestPath = <TUserState>(facts: Facts<TUserState>, from: string, to:
     .shift()
 }
 
-const describePath = <TUserState>(path: NavigationFact<TUserState>[]): string => {
-  return path.map(f => `${f.from} -> ${f.to}`).join('\n')
+const describePath = <TUserState>(path: Fact<TUserState>[]): string => {
+  return path.map(f => {
+    if (f.name) {
+      return f.name
+    } else if ('from' in f) {
+      return `navigate from ${f.from} to ${f.to}`
+    } else {
+      return null
+    }
+  }).filter(s => s).join('\n')
 }
 
 const runPath = <TUserState>(path: Fact<TUserState>[], state: TUserState): void => {
@@ -122,9 +217,11 @@ const runPath = <TUserState>(path: Fact<TUserState>[], state: TUserState): void 
 const addExpectations = <TUserState>(facts: Facts<TUserState>, path: NavigationFact<TUserState>[]): Fact<TUserState>[] => {
   return path.flatMap(nav => [
     ...facts.beforeExiting.filter(e => e.at === nav.from),
+    ...facts.before.filter(e => e.at === nav.name),
     ...facts.beforeEntering.filter(e => e.at === nav.to),
     nav,
     ...facts.afterExiting.filter(e => e.at === nav.from),
+    ...facts.after.filter(e => e.at === nav.name),
     ...facts.afterEntering.filter(e => e.at === nav.to),
   ])
 }
@@ -137,7 +234,7 @@ interface UserState {
 
 const facts: Facts<UserState> = {
   navigation: [
-    { from: 'a', to: 'b', do: state => { state.log.push('a to b') } },
+    { from: 'a', to: 'b', name: 'first step', do: state => { state.log.push('a to b') } },
     { from: 'b', to: 'l1', do: state => { state.log.push('b to l1') } },
     { from: 'b', to: 'r1', do: state => { state.log.push('b to r1') } },
     { from: 'l1', to: 'c', do: state => { state.log.push('l1 to c') } },
@@ -146,18 +243,24 @@ const facts: Facts<UserState> = {
     { from: 'd', to: 'l2', do: state => { state.log.push('d to l2') } },
     { from: 'd', to: 'r2', do: state => { state.log.push('d to r2') } },
   ],
+  before: [
+    { at: 'first step', do: state => { state.log.push('* before first step *') }}
+  ],
   beforeEntering: [
-    { at: 'b', do: state => { state.log.push('before entering b') }}
-  ],
-  afterEntering: [
-    { at: 'b', do: state => { state.log.push('after entering b') }}
-  ],
-  beforeExiting: [
-    { at: 'b', do: state => { state.log.push('befeore exiting b') }}
+    { at: 'b', do: state => { state.log.push('* before entering b *') }}
   ],
   afterExiting: [
-    { at: 'b', do: state => { state.log.push('after exiting b') }}
-  ]
+    { at: 'b', do: state => { state.log.push('* after exiting b *') }}
+  ],
+  after: [
+    { at: 'first step', do: state => { state.log.push('* after first step *') }}
+  ],
+  afterEntering: [
+    { at: 'b', do: state => { state.log.push('* after entering b *') }}
+  ],
+  beforeExiting: [
+    { at: 'b', do: state => { state.log.push('* befeore exiting b *') }}
+  ],
 }
 
 const sut = new FluentStuff(facts)
@@ -173,20 +276,26 @@ sut.toNavigate().from('l2').to('z1').do(state => {
 sut.toNavigate().from('r2').to('z2').do(state => {
   state.log.push('r2 to z2')
 })
-sut.toNavigate().from('e').to('z').do(state => {
+sut.to('end').from('e').to('z').do(state => {
   state.log.push('e to z')
 })
-sut.beforeEntering('d').do(state => {
-  state.log.push('before entering d')
+sut.to('validate precondition').beforeEntering('d').do(state => {
+  state.log.push('* before entering d *')
 })
-sut.beforeExiting('d').do(state => {
-  state.log.push('before exiting d')
+sut.to('validate postcondition').beforeExiting('d').do(state => {
+  state.log.push('* before exiting d *')
 })
 sut.afterEntering('d').do(state => {
-  state.log.push('after entering d')
+  state.log.push('* after entering d *')
 })
 sut.afterExiting('d').do(state => {
-  state.log.push('after exiting d')
+  state.log.push('* after exiting d *')
+})
+sut.before('end').do(state => {
+  state.log.push('* before end *')
+})
+sut.to('verify after ending').after('end').do(state => {
+  state.log.push('* after end *')
 })
 
 // console.log(toGraphvizInput(facts))
@@ -196,7 +305,8 @@ sut.afterExiting('d').do(state => {
 // console.log(describePath(getShortestPath(facts, 'a', 'r2')!))
 
 const state = { log: [] }
-const path = getShortestPath(facts, 'a', null)!
+const path = getShortestPath(facts, 'a', 'z')!
 const fullPath = addExpectations(facts, path)
 runPath(fullPath, state)
+console.log(describePath(fullPath))
 console.log(state)

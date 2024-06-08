@@ -1,13 +1,13 @@
-interface NavigationFact {
+interface NavigationFact<TUserState> {
   from: string
   to: string
-  do: () => void
+  do: (state: TUserState) => void
 }
 
-class FluentStuff {
-  facts: NavigationFact[]
+class FluentStuff<TUserState> {
+  facts: NavigationFact<TUserState>[]
 
-  constructor(facts: NavigationFact[]) {
+  constructor(facts: NavigationFact<TUserState>[]) {
     this.facts = facts
   }
 
@@ -18,7 +18,7 @@ class FluentStuff {
         return {
           to(toState: string) {
             return {
-              do(fn: () => void) {
+              do(fn: (state: TUserState) => void) {
                 facts.push({ from: fromState, to: toState, do: fn })
               }
             }
@@ -29,15 +29,15 @@ class FluentStuff {
   }
 }
 
-const toGraphvizInput = (facts: NavigationFact[]): string => {
-  const describeEdge = (n: NavigationFact) => {
+const toGraphvizInput = <TUserState>(facts: NavigationFact<TUserState>[]): string => {
+  const describeEdge = (n: NavigationFact<TUserState>) => {
     return `  "${n.from}" -> "${n.to}"`
   }
   return `digraph { \n${facts.map(describeEdge).join('\n') }\n}`
 }
 
-const getAllPaths = (facts: NavigationFact[], from: string, to: string | null): NavigationFact[][] => {
-  const helper = (facts: NavigationFact[], from: string, to: string | null, path: NavigationFact[]): NavigationFact[][] => {
+const getAllPaths = <TUserState>(facts: NavigationFact<TUserState>[], from: string, to: string | null): NavigationFact<TUserState>[][] => {
+  const helper = (facts: NavigationFact<TUserState>[], from: string, to: string | null, path: NavigationFact<TUserState>[]): NavigationFact<TUserState>[][] => {
     if (to && path.length && path[path.length - 1].to === to) return [path]
 
     const nextSteps = facts.filter(f => f.from === from && !path.includes(f))
@@ -54,9 +54,9 @@ const getAllPaths = (facts: NavigationFact[], from: string, to: string | null): 
   return helper(facts, from, to, [])
 }
 
-const getShortestPath = (facts: NavigationFact[], from: string, to: string | null): NavigationFact[] | undefined => {
+const getShortestPath = <TUserState>(facts: NavigationFact<TUserState>[], from: string, to: string | null): NavigationFact<TUserState>[] | undefined => {
   const paths = getAllPaths(facts, from, to)
-    .map<[number, NavigationFact[]]>(p => [p.length, p])
+    .map<[number, NavigationFact<TUserState>[]]>(p => [p.length, p])
     .sort()
   if (paths.length) {
     return paths[0][1]
@@ -65,32 +65,56 @@ const getShortestPath = (facts: NavigationFact[], from: string, to: string | nul
   }
 }
 
-const describePath = (path: NavigationFact[]): string => {
+const describePath = <TUserState>(path: NavigationFact<TUserState>[]): string => {
   return path.map(f => `${f.from} -> ${f.to}`).join('\n')
+}
+
+const runPath = <TUserState>(path: NavigationFact<TUserState>[], state: TUserState): void => {
+  for (const step of path) {
+    step.do(state)
+  }
 }
 
 // -- run -- //
 
-const facts: NavigationFact[] = [
-  { from: 'a', to: 'b', do: () => { } },
-  { from: 'b', to: 'l1', do: () => { } },
-  { from: 'b', to: 'r1', do: () => { } },
-  { from: 'l1', to: 'c', do: () => { } },
-  { from: 'r1', to: 'c', do: () => { } },
-  { from: 'c', to: 'd', do: () => { } },
-  { from: 'd', to: 'l2', do: () => { } },
-  { from: 'd', to: 'r2', do: () => { } },
+interface UserState {
+  log: string[]
+}
+
+const facts: NavigationFact<UserState>[] = [
+  { from: 'a', to: 'b', do: state => { state.log.push('a to b') } },
+  { from: 'b', to: 'l1', do: state => { state.log.push('b to l1') } },
+  { from: 'b', to: 'r1', do: state => { state.log.push('b to r1') } },
+  { from: 'l1', to: 'c', do: state => { state.log.push('l1 to c') } },
+  { from: 'r1', to: 'c', do: state => { state.log.push('r1 to c') } },
+  { from: 'c', to: 'd', do: state => { state.log.push('c to d') } },
+  { from: 'd', to: 'l2', do: state => { state.log.push('d to l2') } },
+  { from: 'd', to: 'r2', do: state => { state.log.push('d to r2') } },
 ]
 
 const sut = new FluentStuff(facts)
-sut.toNavigate().from('l2').to('e').do(() => { })
-sut.toNavigate().from('r2').to('e').do(() => { })
-sut.toNavigate().from('l2').to('z1').do(() => { })
-sut.toNavigate().from('r2').to('z2').do(() => { })
-sut.toNavigate().from('e').to('z').do(() => { })
+sut.toNavigate().from('l2').to('e').do(state => {
+  state.log.push('l2 to e')
+ })
+sut.toNavigate().from('r2').to('e').do(state => {
+  state.log.push('r2 to e')
+ })
+sut.toNavigate().from('l2').to('z1').do(state => {
+  state.log.push('l2 to z1')
+ })
+sut.toNavigate().from('r2').to('z2').do(state => {
+  state.log.push('r2 to z2')
+ })
+sut.toNavigate().from('e').to('z').do(state => {
+  state.log.push('e to z')
+ })
 
 // console.log(toGraphvizInput(facts))
 
 // console.log(describePath(getAllPaths(facts, 'a', 'r2')[0])
 
-console.log(describePath(getShortestPath(facts, 'a', 'r2')!))
+// console.log(describePath(getShortestPath(facts, 'a', 'r2')!))
+
+const state = { log: [] }
+runPath(getShortestPath(facts, 'a', 'r2')!, state)
+console.log(state)

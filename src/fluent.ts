@@ -10,6 +10,24 @@ export class FluentStuff<TUserState> {
   to(name: string) {
     const facts = this.facts
     return {
+      beforeAll() {
+        const facts = this.facts
+        return {
+          do(fn: StepFn<TUserState>) {
+            facts.beforeAll.push({ name, at: '* before all *', do: fn })
+          }
+        }
+      },
+    
+      afterAll() {
+        const facts = this.facts
+        return {
+          do(fn: StepFn<TUserState>) {
+            facts.afterAll.push({ name, at: '* after all *', do: fn })
+          }
+        }
+      },
+      
       from(fromState: string) {
         return {
           to(toState: string) {
@@ -85,6 +103,24 @@ export class FluentStuff<TUserState> {
             }
           }
         }
+      }
+    }
+  }
+
+  beforeAll() {
+    const facts = this.facts
+    return {
+      do(fn: StepFn<TUserState>) {
+        facts.beforeAll.push({ at: '* before all *', do: fn })
+      }
+    }
+  }
+
+  afterAll() {
+    const facts = this.facts
+    return {
+      do(fn: StepFn<TUserState>) {
+        facts.afterAll.push({ at: '* after all *', do: fn })
       }
     }
   }

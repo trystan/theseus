@@ -21,22 +21,26 @@ export type Path<TUserState> = Fact<TUserState>[]
 
 export interface Facts<TUserState> {
   navigation: NavigationFact<TUserState>[]
+  beforeAll: ExpectationFact<TUserState>[]
   before: ExpectationFact<TUserState>[]
   beforeEntering: ExpectationFact<TUserState>[]
   beforeExiting: ExpectationFact<TUserState>[]
   after: ExpectationFact<TUserState>[]
   afterEntering: ExpectationFact<TUserState>[]
   afterExiting: ExpectationFact<TUserState>[]
+  afterAll: ExpectationFact<TUserState>[]
 }
 
 export const newFacts = <TUserState>(): Facts<TUserState> => ({
   navigation: [],
+  beforeAll: [],
   before: [],
   beforeEntering: [],
   beforeExiting: [],
   after: [],
   afterEntering: [],
   afterExiting: [],
+  afterAll: []
 })
 
 export const getAllPaths = <TUserState>(facts: Facts<TUserState>, from: string, to: string | null): NavPath<TUserState>[] => {
@@ -78,7 +82,7 @@ export const describePath = <TUserState>(path: Path<TUserState>): string[] => {
 }
 
 export const addExpectations = <TUserState>(facts: Facts<TUserState>, path: NavPath<TUserState>): Path<TUserState> => {
-  return path.flatMap(nav => [
+  const middle = path.flatMap(nav => [
     ...facts.beforeExiting.filter(e => e.at === nav.from),
     ...facts.before.filter(e => e.at === nav.name),
     ...facts.beforeEntering.filter(e => e.at === nav.to),
@@ -87,17 +91,24 @@ export const addExpectations = <TUserState>(facts: Facts<TUserState>, path: NavP
     ...facts.after.filter(e => e.at === nav.name),
     ...facts.afterEntering.filter(e => e.at === nav.to),
   ])
+  return [
+    ...facts.beforeAll,
+    ...middle,
+    ...facts.afterAll,
+  ]
 }
 
 export const runPaths = async <TUserState>(paths: Path<TUserState>[], states: TUserState[]): Promise<void> => {
-  states.forEach(async state => {
-    paths.forEach(async path => {
-      path.forEach(async step => {
-        const result = step.do(state)
-        if (result) {
-          await result
-        }
-      })
-    })
-  })
+  const runPath = async <TUserState>(path: Path<TUserState>, state: TUserState): Promise<void> => {
+    for (var step of path) {
+      await step.do(state)
+    }
+  }
+  const promises: Promise<any>[] = []
+  for (var path of paths) {
+    for (var state of states) {
+      promises.push(runPath(path, state))
+    }
+  }
+  await Promise.all(promises)
 }

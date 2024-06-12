@@ -17,6 +17,9 @@ const facts: Facts<UserState> = {
     { from: 'd', to: 'l2', do: state => { state.log.push('d to l2') } },
     { from: 'd', to: 'r2', do: state => { state.log.push('d to r2') } },
   ],
+  beforeAll: [
+
+  ],
   before: [
     { at: 'first step', do: state => { state.log.push('* before first step *') }}
   ],
@@ -34,6 +37,9 @@ const facts: Facts<UserState> = {
   ],
   beforeExiting: [
     { at: 'b', do: state => { state.log.push('* befeore exiting b *') }}
+  ],
+  afterAll: [
+
   ],
 }
 

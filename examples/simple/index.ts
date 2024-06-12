@@ -1,5 +1,6 @@
-import { FluentStuff } from "../src/fluent"
-import { Facts, addExpectations, describePath, getShortestPath, runPath } from "../src/theseus"
+import { FluentStuff } from "../../src/fluent"
+import { toGraphvizInput } from "../../src/graphviz"
+import { Facts } from "../../src/theseus"
 
 interface UserState {
   log: string[]
@@ -50,7 +51,7 @@ sut.toNavigate().from('l2').to('z1').do(state => {
 sut.toNavigate().from('r2').to('z2').do(state => {
   state.log.push('r2 to z2')
 })
-sut.to('end').from('e').to('z').do(state => {
+sut.to('reach the end').from('e').to('z').do(state => {
   state.log.push('e to z')
 })
 sut.to('validate precondition').beforeEntering('d').do(state => {
@@ -65,22 +66,22 @@ sut.afterEntering('d').do(state => {
 sut.afterExiting('d').do(state => {
   state.log.push('* after exiting d *')
 })
-sut.before('end').do(state => {
+sut.before('reach the end').do(state => {
   state.log.push('* before end *')
 })
-sut.to('verify after ending').after('end').do(state => {
+sut.to('verify after ending').after('reach the end').do(state => {
   state.log.push('* after end *')
 })
 
-// console.log(toGraphvizInput(facts))
+console.log(toGraphvizInput(facts))
 
 // console.log(describePath(getAllPaths(facts, 'a', 'r2')[0])
 
 // console.log(describePath(getShortestPath(facts, 'a', 'r2')!))
 
-const state = { log: [] }
-const path = getShortestPath(facts, 'a', 'z')!
-const fullPath = addExpectations(facts, path)
-runPath(fullPath, state)
-console.log(describePath(fullPath))
-console.log(state)
+// const state = { log: [] }
+// const path = getShortestPath(facts, 'a', 'z')!
+// const fullPath = addExpectations(facts, path)
+// runPath(fullPath, state)
+// console.log(describePath(fullPath))
+// console.log(state)

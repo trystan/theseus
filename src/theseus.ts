@@ -1,14 +1,16 @@
+export type StepFn<TUserState> = (state: TUserState) => void | Promise<any>
+
 export interface NavigationFact<TUserState> {
   name?: string
   from: string
   to: string
-  do: (state: TUserState) => void
+  do: StepFn<TUserState>
 }
 
 export interface ExpectationFact<TUserState> {
   name?: string
   at: string
-  do: (state: TUserState) => void
+  do: StepFn<TUserState>
 }
 
 export type Fact<TUserState> = NavigationFact<TUserState> | ExpectationFact<TUserState>
@@ -27,10 +29,15 @@ export interface Facts<TUserState> {
   afterExiting: ExpectationFact<TUserState>[]
 }
 
-export const toGraphvizInput = <TUserState>(facts: NavigationFact<TUserState>[]): string => {
-  const describeEdge = (n: NavigationFact<TUserState>) => `  "${n.from}" -> "${n.to}"`
-  return `digraph { \n${facts.map(describeEdge).join('\n') }\n}`
-}
+export const newFacts = <TUserState>(): Facts<TUserState> => ({
+  navigation: [],
+  before: [],
+  beforeEntering: [],
+  beforeExiting: [],
+  after: [],
+  afterEntering: [],
+  afterExiting: [],
+})
 
 export const getAllPaths = <TUserState>(facts: Facts<TUserState>, from: string, to: string | null): NavPath<TUserState>[] => {
   const helper = (from: string, to: string | null, path: NavigationFact<TUserState>[]): NavPath<TUserState>[] => {
@@ -58,16 +65,16 @@ export const getShortestPath = <TUserState>(facts: Facts<TUserState>, from: stri
     .shift()
 }
 
-export const describePath = <TUserState>(path: Path<TUserState>): string => {
+export const describePath = <TUserState>(path: Path<TUserState>): string[] => {
   return path.map(f => {
     if (f.name) {
       return f.name
     } else if ('from' in f) {
       return `navigate from ${f.from} to ${f.to}`
     } else {
-      return null
+      return 'verification step'
     }
-  }).filter(s => s).join('\n')
+  }).filter((s): s is string => Boolean(s))
 }
 
 export const addExpectations = <TUserState>(facts: Facts<TUserState>, path: NavPath<TUserState>): Path<TUserState> => {
@@ -82,6 +89,15 @@ export const addExpectations = <TUserState>(facts: Facts<TUserState>, path: NavP
   ])
 }
 
-export const runPath = <TUserState>(path: Fact<TUserState>[], state: TUserState): void => {
-  path.forEach(step => step.do(state))
+export const runPaths = async <TUserState>(paths: Path<TUserState>[], states: TUserState[]): Promise<void> => {
+  states.forEach(async state => {
+    paths.forEach(async path => {
+      path.forEach(async step => {
+        const result = step.do(state)
+        if (result) {
+          await result
+        }
+      })
+    })
+  })
 }

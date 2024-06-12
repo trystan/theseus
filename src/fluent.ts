@@ -1,10 +1,10 @@
-import { Facts } from "./theseus"
+import { Facts, StepFn, newFacts } from "./theseus"
 
 export class FluentStuff<TUserState> {
   facts: Facts<TUserState>
 
-  constructor(facts: Facts<TUserState>) {
-    this.facts = facts
+  constructor(existingFacts?: Facts<TUserState>) {
+    this.facts = existingFacts ?? newFacts()
   }
 
   to(name: string) {
@@ -14,7 +14,7 @@ export class FluentStuff<TUserState> {
         return {
           to(toState: string) {
             return {
-              do(fn: (state: TUserState) => void) {
+              do(fn: StepFn<TUserState>) {
                 facts.navigation.push({ name, from: fromState, to: toState, do: fn })
               }
             }
@@ -24,7 +24,7 @@ export class FluentStuff<TUserState> {
     
       before(navigation: string) {
         return {
-          do(fn: (state: TUserState) => void) {
+          do(fn: StepFn<TUserState>) {
             facts.before.push({ name, at: navigation, do: fn })
           }
         }
@@ -32,7 +32,7 @@ export class FluentStuff<TUserState> {
 
       beforeEntering(state: string) {
         return {
-          do(fn: (state: TUserState) => void) {
+          do(fn: StepFn<TUserState>) {
             facts.beforeEntering.push({ name, at: state, do: fn })
           }
         }
@@ -40,7 +40,7 @@ export class FluentStuff<TUserState> {
       
       beforeExiting(state: string) {
         return {
-          do(fn: (state: TUserState) => void) {
+          do(fn: StepFn<TUserState>) {
             facts.beforeExiting.push({ name, at: state, do: fn })
           }
         }
@@ -48,7 +48,7 @@ export class FluentStuff<TUserState> {
       
       after(navigation: string) {
         return {
-          do(fn: (state: TUserState) => void) {
+          do(fn: StepFn<TUserState>) {
             facts.after.push({ name, at: navigation, do: fn })
           }
         }
@@ -56,7 +56,7 @@ export class FluentStuff<TUserState> {
 
       afterEntering(state: string) {
         return {
-          do(fn: (state: TUserState) => void) {
+          do(fn: StepFn<TUserState>) {
             facts.afterEntering.push({ name, at: state, do: fn })
           }
         }
@@ -64,7 +64,7 @@ export class FluentStuff<TUserState> {
 
       afterExiting(state: string) {
         return {
-          do(fn: (state: TUserState) => void) {
+          do(fn: StepFn<TUserState>) {
             facts.afterExiting.push({ name, at: state, do: fn })
           }
         }
@@ -79,7 +79,7 @@ export class FluentStuff<TUserState> {
         return {
           to(toState: string) {
             return {
-              do(fn: (state: TUserState) => void) {
+              do(fn: StepFn<TUserState>) {
                 facts.navigation.push({ from: fromState, to: toState, do: fn })
               }
             }
@@ -92,7 +92,7 @@ export class FluentStuff<TUserState> {
   before(navigation: string) {
     const facts = this.facts
     return {
-      do(fn: (state: TUserState) => void) {
+      do(fn: StepFn<TUserState>) {
         facts.before.push({ at: navigation, do: fn })
       }
     }
@@ -101,7 +101,7 @@ export class FluentStuff<TUserState> {
   beforeEntering(state: string) {
     const facts = this.facts
     return {
-      do(fn: (state: TUserState) => void) {
+      do(fn: StepFn<TUserState>) {
         facts.beforeEntering.push({ at: state, do: fn })
       }
     }
@@ -110,7 +110,7 @@ export class FluentStuff<TUserState> {
   beforeExiting(state: string) {
     const facts = this.facts
     return {
-      do(fn: (state: TUserState) => void) {
+      do(fn: StepFn<TUserState>) {
         facts.beforeExiting.push({ at: state, do: fn })
       }
     }
@@ -119,7 +119,7 @@ export class FluentStuff<TUserState> {
   after(navigation: string) {
     const facts = this.facts
     return {
-      do(fn: (state: TUserState) => void) {
+      do(fn: StepFn<TUserState>) {
         facts.after.push({ at: navigation, do: fn })
       }
     }
@@ -128,7 +128,7 @@ export class FluentStuff<TUserState> {
   afterEntering(state: string) {
     const facts = this.facts
     return {
-      do(fn: (state: TUserState) => void) {
+      do(fn: StepFn<TUserState>) {
         facts.afterEntering.push({ at: state, do: fn })
       }
     }
@@ -137,7 +137,7 @@ export class FluentStuff<TUserState> {
   afterExiting(state: string) {
     const facts = this.facts
     return {
-      do(fn: (state: TUserState) => void) {
+      do(fn: StepFn<TUserState>) {
         facts.afterExiting.push({ at: state, do: fn })
       }
     }

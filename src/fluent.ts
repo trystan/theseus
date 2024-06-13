@@ -1,4 +1,4 @@
-import { Facts, StepFn, newFacts } from "./theseus"
+import { Facts, Meta, StepFn, defaultMeta, newFacts } from "./theseus"
 
 export class FluentStuff<TUserState> {
   facts: Facts<TUserState>
@@ -11,19 +11,29 @@ export class FluentStuff<TUserState> {
     const facts = this.facts
     return {
       beforeAll() {
-        const facts = this.facts
         return {
           do(fn: StepFn<TUserState>) {
-            facts.beforeAll.push({ name, at: '* before all *', do: fn })
+            const fact = { name, at: '* before all *', do: fn, meta: defaultMeta() }
+            facts.beforeAll.push(fact)
+            return {
+              with(setup: (meta: Meta) => void) {
+                setup(fact.meta)
+              }
+            }
           }
         }
       },
     
       afterAll() {
-        const facts = this.facts
         return {
           do(fn: StepFn<TUserState>) {
-            facts.afterAll.push({ name, at: '* after all *', do: fn })
+            const fact = { name, at: '* after all *', do: fn, meta: defaultMeta() }
+            facts.afterAll.push(fact)
+            return {
+              with(setup: (meta: Meta) => void) {
+                setup(fact.meta)
+              }
+            }
           }
         }
       },
@@ -33,7 +43,13 @@ export class FluentStuff<TUserState> {
           to(toState: string) {
             return {
               do(fn: StepFn<TUserState>) {
-                facts.navigation.push({ name, from: fromState, to: toState, do: fn })
+                const fact = { name, from: fromState, to: toState, do: fn, meta: defaultMeta() }
+                facts.navigation.push(fact)
+                return {
+                  with(setup: (meta: Meta) => void) {
+                    setup(fact.meta)
+                  }
+                }
               }
             }
           }
@@ -43,7 +59,13 @@ export class FluentStuff<TUserState> {
       before(navigation: string) {
         return {
           do(fn: StepFn<TUserState>) {
-            facts.before.push({ name, at: navigation, do: fn })
+            const fact = { name, at: navigation, do: fn, meta: defaultMeta() }
+            facts.before.push(fact)
+            return {
+              with(setup: (meta: Meta) => void) {
+                setup(fact.meta)
+              }
+            }
           }
         }
       },
@@ -51,7 +73,13 @@ export class FluentStuff<TUserState> {
       beforeEntering(state: string) {
         return {
           do(fn: StepFn<TUserState>) {
-            facts.beforeEntering.push({ name, at: state, do: fn })
+            const fact = { name, at: state, do: fn, meta: defaultMeta() }
+            facts.beforeEntering.push(fact)
+            return {
+              with(setup: (meta: Meta) => void) {
+                setup(fact.meta)
+              }
+            }
           }
         }
       },
@@ -59,7 +87,13 @@ export class FluentStuff<TUserState> {
       beforeExiting(state: string) {
         return {
           do(fn: StepFn<TUserState>) {
-            facts.beforeExiting.push({ name, at: state, do: fn })
+            const fact = { name, at: state, do: fn, meta: defaultMeta() }
+            facts.beforeExiting.push(fact)
+            return {
+              with(setup: (meta: Meta) => void) {
+                setup(fact.meta)
+              }
+            }
           }
         }
       },
@@ -67,7 +101,13 @@ export class FluentStuff<TUserState> {
       after(navigation: string) {
         return {
           do(fn: StepFn<TUserState>) {
-            facts.after.push({ name, at: navigation, do: fn })
+            const fact = { name, at: navigation, do: fn, meta: defaultMeta() }
+            facts.after.push(fact)
+            return {
+              with(setup: (meta: Meta) => void) {
+                setup(fact.meta)
+              }
+            }
           }
         }
       },
@@ -75,7 +115,13 @@ export class FluentStuff<TUserState> {
       afterEntering(state: string) {
         return {
           do(fn: StepFn<TUserState>) {
-            facts.afterEntering.push({ name, at: state, do: fn })
+            const fact = { name, at: state, do: fn, meta: defaultMeta() }
+            facts.afterEntering.push(fact)
+            return {
+              with(setup: (meta: Meta) => void) {
+                setup(fact.meta)
+              }
+            }
           }
         }
       },
@@ -83,7 +129,13 @@ export class FluentStuff<TUserState> {
       afterExiting(state: string) {
         return {
           do(fn: StepFn<TUserState>) {
-            facts.afterExiting.push({ name, at: state, do: fn })
+            const fact = { name, at: state, do: fn, meta: defaultMeta() }
+            facts.afterExiting.push(fact)
+            return {
+              with(setup: (meta: Meta) => void) {
+                setup(fact.meta)
+              }
+            }
           }
         }
       }
@@ -98,7 +150,13 @@ export class FluentStuff<TUserState> {
           to(toState: string) {
             return {
               do(fn: StepFn<TUserState>) {
-                facts.navigation.push({ from: fromState, to: toState, do: fn })
+                const fact = { from: fromState, to: toState, do: fn, meta: defaultMeta() }
+                facts.navigation.push(fact)
+                return {
+                  with(setup: (meta: Meta) => void) {
+                    setup(fact.meta)
+                  }
+                }
               }
             }
           }
@@ -111,7 +169,13 @@ export class FluentStuff<TUserState> {
     const facts = this.facts
     return {
       do(fn: StepFn<TUserState>) {
-        facts.beforeAll.push({ at: '* before all *', do: fn })
+        const fact = { at: '* before all *', do: fn, meta: defaultMeta() }
+        facts.beforeAll.push(fact)
+        return {
+          with(setup: (meta: Meta) => void) {
+            setup(fact.meta)
+          }
+        }
       }
     }
   }
@@ -120,7 +184,13 @@ export class FluentStuff<TUserState> {
     const facts = this.facts
     return {
       do(fn: StepFn<TUserState>) {
-        facts.afterAll.push({ at: '* after all *', do: fn })
+        const fact = { at: '* after all *', do: fn, meta: defaultMeta() }
+        facts.afterAll.push(fact)
+        return {
+          with(setup: (meta: Meta) => void) {
+            setup(fact.meta)
+          }
+        }
       }
     }
   }
@@ -129,7 +199,13 @@ export class FluentStuff<TUserState> {
     const facts = this.facts
     return {
       do(fn: StepFn<TUserState>) {
-        facts.before.push({ at: navigation, do: fn })
+        const fact = { at: navigation, do: fn, meta: defaultMeta() }
+        facts.before.push(fact)
+        return {
+          with(setup: (meta: Meta) => void) {
+            setup(fact.meta)
+          }
+        }
       }
     }
   }
@@ -138,7 +214,13 @@ export class FluentStuff<TUserState> {
     const facts = this.facts
     return {
       do(fn: StepFn<TUserState>) {
-        facts.beforeEntering.push({ at: state, do: fn })
+        const fact = { at: state, do: fn, meta: defaultMeta() }
+        facts.beforeEntering.push(fact)
+        return {
+          with(setup: (meta: Meta) => void) {
+            setup(fact.meta)
+          }
+        }
       }
     }
   }
@@ -147,7 +229,13 @@ export class FluentStuff<TUserState> {
     const facts = this.facts
     return {
       do(fn: StepFn<TUserState>) {
-        facts.beforeExiting.push({ at: state, do: fn })
+        const fact = { at: state, do: fn, meta: defaultMeta() }
+        facts.beforeExiting.push(fact)
+        return {
+          with(setup: (meta: Meta) => void) {
+            setup(fact.meta)
+          }
+        }
       }
     }
   }
@@ -156,7 +244,13 @@ export class FluentStuff<TUserState> {
     const facts = this.facts
     return {
       do(fn: StepFn<TUserState>) {
-        facts.after.push({ at: navigation, do: fn })
+        const fact = { at: navigation, do: fn, meta: defaultMeta() }
+        facts.after.push(fact)
+        return {
+          with(setup: (meta: Meta) => void) {
+            setup(fact.meta)
+          }
+        }
       }
     }
   }
@@ -165,7 +259,13 @@ export class FluentStuff<TUserState> {
     const facts = this.facts
     return {
       do(fn: StepFn<TUserState>) {
-        facts.afterEntering.push({ at: state, do: fn })
+        const fact = { at: state, do: fn, meta: defaultMeta() }
+        facts.afterEntering.push(fact)
+        return {
+          with(setup: (meta: Meta) => void) {
+            setup(fact.meta)
+          }
+        }
       }
     }
   }
@@ -174,7 +274,13 @@ export class FluentStuff<TUserState> {
     const facts = this.facts
     return {
       do(fn: StepFn<TUserState>) {
-        facts.afterExiting.push({ at: state, do: fn })
+        const fact = { at: state, do: fn, meta: defaultMeta() }
+        facts.afterExiting.push(fact)
+        return {
+          with(setup: (meta: Meta) => void) {
+            setup(fact.meta)
+          }
+        }
       }
     }
   }

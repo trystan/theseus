@@ -1,23 +1,44 @@
-export type StepFn<TUserState> = (state: TUserState) => void | Promise<any>
+import { setHeapSnapshotNearHeapLimit } from "v8"
+
+export type Context<TUserState> = { path: Path<TUserState>, index: number }
+
+export type StepFn<TUserState> = (state: TUserState, context: Context<TUserState> ) => void | Promise<any>
+
+export type Meta = { cost: number, maximumOccurances: number }
+
+export const defaultMeta = (): Meta => ({ cost: 1, maximumOccurances: 1 })
 
 export interface NavigationFact<TUserState> {
   name?: string
   from: string
   to: string
   do: StepFn<TUserState>
+  meta: Meta
 }
 
 export interface ExpectationFact<TUserState> {
   name?: string
   at: string
   do: StepFn<TUserState>
+  meta: Meta
 }
 
 export type Fact<TUserState> = NavigationFact<TUserState> | ExpectationFact<TUserState>
 
-export type NavPath<TUserState> = NavigationFact<TUserState>[]
+export const describe = <TUserState>(fact: Fact<TUserState>): string => {
+  if (fact.name) return fact.name
 
-export type Path<TUserState> = Fact<TUserState>[]
+  if ('at' in fact) {
+    return fact.at
+  } else {
+    return `navigate from ${fact.from} to ${fact.to}`
+  }
+}
+
+export type Path<TUserState> = {
+  totalCost: number
+  steps: Fact<TUserState>[]
+}
 
 export interface Facts<TUserState> {
   navigation: NavigationFact<TUserState>[]
@@ -43,45 +64,36 @@ export const newFacts = <TUserState>(): Facts<TUserState> => ({
   afterAll: []
 })
 
-export const getAllPaths = <TUserState>(facts: Facts<TUserState>, from: string, to: string | null): NavPath<TUserState>[] => {
-  const helper = (from: string, to: string | null, path: NavigationFact<TUserState>[]): NavPath<TUserState>[] => {
-    if (to && path.length && path[path.length - 1].to === to) return [path]
+export const getAllPaths = <TUserState>(facts: Facts<TUserState>, from: string, to: string | null): Path<TUserState>[] => {
+  const helper = (from: string, path: NavigationFact<TUserState>[]): Path<TUserState>[] => {
+    if (to && path.length && path[path.length - 1].to === to) return [toPath(facts, path)]
 
-    const nextSteps = facts.navigation.filter(f => f.from === from && !path.includes(f))
+    const nextSteps = facts.navigation
+      .filter(f => f.from === from)
+      .filter(f => path.filter(f2 => f2 === f).length < f.meta.maximumOccurances)
+
     if (nextSteps.length === 0) {
       if (path.length && (to === null || path[path.length - 1].to === to)) {
-        return [path]
+        return [toPath(facts, path)]
       } else {
         return []
       }
     } else {
-      return nextSteps.flatMap(next => helper(next.to, to, [...path, next]))
+      return nextSteps.flatMap(next => helper(next.to, [...path, next]))
     }
   }
-  return helper(from, to, [])
+  return helper(from, [])
 }
 
-export const getShortestPath = <TUserState>(facts: Facts<TUserState>, from: string, to: string | null): NavPath<TUserState> | undefined => {
+export const getShortestPath = <TUserState>(facts: Facts<TUserState>, from: string, to: string | null): Path<TUserState> | undefined => {
   return getAllPaths(facts, from, to)
-    .map<[number, NavPath<TUserState>]>(p => [p.length, p])
+    .map<[number, Path<TUserState>]>(p => [p.totalCost, p])
     .sort()
     .map(kv => kv[1])
     .shift()
 }
 
-export const describePath = <TUserState>(path: Path<TUserState>): string[] => {
-  return path.map(f => {
-    if (f.name) {
-      return f.name
-    } else if ('from' in f) {
-      return `navigate from ${f.from} to ${f.to}`
-    } else {
-      return 'verification step'
-    }
-  }).filter((s): s is string => Boolean(s))
-}
-
-export const addExpectations = <TUserState>(facts: Facts<TUserState>, path: NavPath<TUserState>): Path<TUserState> => {
+const toPath = <TUserState>(facts: Facts<TUserState>, path: NavigationFact<TUserState>[]): Path<TUserState> => {
   const middle = path.flatMap(nav => [
     ...facts.beforeExiting.filter(e => e.at === nav.from),
     ...facts.before.filter(e => e.at === nav.name),
@@ -91,24 +103,127 @@ export const addExpectations = <TUserState>(facts: Facts<TUserState>, path: NavP
     ...facts.after.filter(e => e.at === nav.name),
     ...facts.afterEntering.filter(e => e.at === nav.to),
   ])
-  return [
+  const steps = [
     ...facts.beforeAll,
     ...middle,
     ...facts.afterAll,
   ]
+  return {
+    totalCost: steps.length,
+    steps
+  }
 }
 
-export const runPaths = async <TUserState>(paths: Path<TUserState>[], states: TUserState[]): Promise<void> => {
-  const runPath = async <TUserState>(path: Path<TUserState>, state: TUserState): Promise<void> => {
-    for (var step of path) {
-      await step.do(state)
+export type StateConstructor<TUserState> = () => (TUserState | Promise<TUserState>)
+
+class PathRunner<TUserState> {
+  stats: { durations: number[], successes: number, fails: number } = { durations: [], successes: 0, fails: 0 }
+
+  async runPath(path: Path<TUserState>, state: TUserState): Promise<void> {
+    let keepGoing = true
+    for (let index = 0; keepGoing && index < path.steps.length; index++) {
+      const step = path.steps[index]
+      const before = Date.now()
+
+      try {
+        process.stdout.write(describe(step))
+
+        await step.do(state, { path, index })
+        
+        const duration = (Date.now() - before) / 1000
+        this.stats.durations.push(duration)
+        if (duration > 1) {
+          process.stdout.write(` [${duration.toFixed(2)}s]`)
+        }
+        process.stdout.write(` *OK*\n`)
+        this.stats.successes++
+      } catch (e) {
+        const duration = (Date.now() - before) / 1000
+        this.stats.durations.push(duration)
+        if (duration > 1) {
+          process.stdout.write(` [${duration.toFixed(2)}s]`)
+        }
+        process.stdout.write(` *FAIL*\n    ${e}\n\n`)
+        this.stats.fails++
+        keepGoing = false
+
+        for (var afterAllIndex = index + 1; afterAllIndex < path.steps.length; afterAllIndex++) {
+          const otherStep = path.steps[afterAllIndex]
+          if ('at' in otherStep && otherStep.at === '* after all *') {
+            process.stdout.write(` == cleanup: ${describe(otherStep)}\n`)
+            await otherStep.do(state, { path, index: afterAllIndex })
+          }
+        }
+      }
     }
   }
-  const promises: Promise<any>[] = []
-  for (var path of paths) {
-    for (var state of states) {
-      promises.push(runPath(path, state))
+
+  async runPaths(
+      paths: Path<TUserState>[],
+      states: Array<StateConstructor<TUserState>>,
+      options: { concurrency: number }): Promise<void> {
+
+    process.on('SIGTERM', () => console.log('* SIGTERM *'))
+
+    console.log({ total: paths.length * states.length, paths: paths.length, states: states.length })
+    
+    if (options.concurrency < 1) throw Error('concurrency must be greater than zero')
+
+    const runPromises: Promise<any>[] = []
+    let isRunning = true
+    let pathIndex = -1
+    let thisPath: Path<TUserState> | null = null
+    let stateIndex = 0
+    let thisStateConstructor: StateConstructor<TUserState> = states[stateIndex]
+    const addOne = async (): Promise<boolean> =>  {
+      pathIndex = pathIndex + 1
+      if (pathIndex >= paths.length) {
+        pathIndex = 0
+        stateIndex = stateIndex + 1
+        if (stateIndex >= states.length) {
+          isRunning = false
+          return false
+        }
+        thisStateConstructor = states[stateIndex]
+      }
+      thisPath = paths[pathIndex]
+      const nextPath = thisPath
+      Promise.resolve(thisStateConstructor())
+        .then(nextState => {
+          runPromises.push(this.runPath(nextPath, nextState)
+            .then(() => {
+              if (isRunning) {
+                addOne()
+              }
+            }))
+        })
+      return true
     }
+
+    for (var i = 0; i < options.concurrency; i++) {
+      await addOne();
+    }
+    
+    const runPromise = new Promise<void>(async (resolve, reject) => {
+      const timer = setInterval(async () => {
+        if (isRunning) return
+        clearInterval(timer)
+            
+        await Promise.all(runPromises)
+        
+        console.log(this.stats)
+        
+        resolve()
+      }, 100)
+    })
+
+    return runPromise
   }
-  await Promise.all(promises)
+}
+
+export const runPaths = async <TUserState>(
+    paths: Path<TUserState>[],
+    states: Array<StateConstructor<TUserState>>,
+    options: { concurrency: number } = { concurrency: 1 }): Promise<void> => {
+  await new PathRunner<TUserState>().runPaths(paths, states, options)
 }

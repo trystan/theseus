@@ -3,6 +3,8 @@ import { FluentStuff } from '../../src/fluent'
 import { getAllPaths, runPaths } from '../../src/theseus'
 import { toGraphvizInput } from '../../src/graphviz'
 
+type PlanState = { }
+
 type UserState = {
   browser: WebdriverIO.Browser
   data: {
@@ -10,7 +12,7 @@ type UserState = {
   }
 }
 
-const sut = new FluentStuff<UserState>()
+const sut = new FluentStuff<PlanState, UserState>()
 
 sut.toNavigate().from('start').to('home').do(async state => {
   await state.browser.url('https://boardgamegeek.com/')
@@ -22,8 +24,6 @@ sut.to('search for a game').from('home').to('search results list').do(async stat
   await input.setValue(state.data.gameTitle ?? 'Cosmic Encounter')
   const button = await $('button[type=submit]')
   await button.click()
-}).with(meta => {
-  meta.cost = 10
 })
 
 sut.toNavigate().from('search results list').to('game page').do(async state => {
@@ -77,7 +77,7 @@ const run = async () => {
     })
   }
 
-  const paths = getAllPaths(sut.facts, 'start', null)
+  const paths = getAllPaths(sut.facts, 'start', { })
 
   const stateAsyncConstructors: (() => Promise<UserState>)[] = [
     async () => ({ browser: await newBrowser(), data: { gameTitle: 'Small World' } }),

@@ -1,7 +1,6 @@
 import { remote } from 'webdriverio'
-import { FluentStuff } from '../../src/fluent'
-import { getAllPaths, runPaths } from '../../src/theseus'
-import { toGraphvizInput } from '../../src/graphviz'
+import { FluentStuff } from 'theseus/fluent'
+import { getAllPaths, runPaths } from 'theseus'
 
 type PlanState = { }
 

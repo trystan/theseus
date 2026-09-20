@@ -28,12 +28,6 @@ export type FinallyCallback<TPlanState, TUserState> = {
 
 export type Fact<TPlanState, TUserState> = NavigationFact<TPlanState, TUserState> | ExpectationFact<TPlanState, TUserState>
 
-export const describe = <TPlanState, TUserState>(fact: Fact<TPlanState, TUserState>): string => {
-  if (fact.name) return fact.name
-  if ('at' in fact) return fact.at
-  return `navigate from ${fact.from} to ${fact.to}`
-}
-
 export type Path<TPlanState, TUserState> = {
   steps: Fact<TPlanState, TUserState>[]
   finally: FinallyCallback<TPlanState, TUserState>[]
@@ -77,10 +71,13 @@ export const getAllPaths = <TPlanState, TUserState>(
       here: NavigationFact<TPlanState, TUserState> | null,
       currentPlanState: TPlanState): Path<TPlanState, TUserState>[] => {
 
+    const isNext = (f: NavigationFact<TPlanState, TUserState>) => f.from === from
+    const isNotInPath = (f: NavigationFact<TPlanState, TUserState>) => !pathSoFar.some(f2 => f2 === f)
     const matchesPlanState = (f: Fact<TPlanState, TUserState> | FinallyCallback<TPlanState, TUserState>) => f.ifPlanState === undefined || f.ifPlanState(currentPlanState)
 
     const nextNavSteps = facts.navigation
-      .filter(f => f.from === from && !pathSoFar.some(f2 => f2 === f))
+      .filter(isNext)
+      .filter(isNotInPath)
       .filter(matchesPlanState)
 
     const isDeadEnd = nextNavSteps.length === 0

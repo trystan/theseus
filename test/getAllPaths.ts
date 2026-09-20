@@ -1,7 +1,6 @@
 import assert from 'assert/strict'
 import { describe, it } from 'node:test'
-import { FluentStuff } from "../src/fluent.ts"
-import { getAllPaths, newFacts, describe as describeFact, type Path } from "../src/theseus.ts"
+import { Fluent, describe as describeFact, getAllPaths, newFacts, type Path } from "../src/index.ts"
 
 type PlanState = { number: number }
 
@@ -14,7 +13,7 @@ const pathNames = <TPlanState, TUserState>(paths: Path<TPlanState, TUserState>[]
   paths.map(p => p.steps.map(s => s.name).join(', '))
 
 describe('in general', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b').from('a').to('b').do(() => {})
   sut.to('a->c').from('a').to('c').do(() => {})
   sut.to('b->c').from('b').to('c').do(() => {})
@@ -52,7 +51,7 @@ describe('in general', () => {
   })
   
   describe('when loops are found', () => {
-    var sut = new FluentStuff<PlanState, UserState>()
+    var sut = new Fluent<PlanState, UserState>()
     sut.to('a->b').from('a').to('b').do(() => {})
     sut.to('b->a').from('b').to('a').do(() => {})
     sut.to('a->c').from('a').to('c').do(() => {})
@@ -70,7 +69,7 @@ describe('in general', () => {
   })
   
   describe('when expectations are involved', () => {
-    var sut = new FluentStuff<PlanState, UserState>()
+    var sut = new Fluent<PlanState, UserState>()
     sut.to('a->b').from('a').to('b').do(() => {})
     sut.to('b->c').from('b').to('c').do(() => {})
     sut.beforeAll().do(() => {})
@@ -103,7 +102,7 @@ describe('in general', () => {
 })
 
 describe('when navigation uses planState', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b0').from('a', s => s.number === 0).to('b', s => s.number = 0).do(() => {})
   sut.to('a->b1').from('a', s => s.number === 0).to('b', s => s.number = 1).do(() => {})
   sut.to('b3->c').from('b', s => s.number === 3).to('c', s => s.number = 2).do(() => {})
@@ -119,7 +118,7 @@ describe('when navigation uses planState', () => {
 })
 
 describe('when expectations require planState', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b').from('a').to('b', s => s.number = 1).do(() => {})
   sut.to('b->c').from('b').to('c').do(() => {})
   sut.beforeAll().do(() => {})
@@ -157,7 +156,7 @@ describe('when there are no facts at all', () => {
 
 describe('when the start and the target are the same', () => {
   describe('and there is no way back', () => {
-    var sut = new FluentStuff<PlanState, UserState>()
+    var sut = new Fluent<PlanState, UserState>()
     sut.to('a->b').from('a').to('b').do(() => {})
 
     it('does not return an empty path', () => {
@@ -167,7 +166,7 @@ describe('when the start and the target are the same', () => {
   })
 
   describe('and there is a way back', () => {
-    var sut = new FluentStuff<PlanState, UserState>()
+    var sut = new Fluent<PlanState, UserState>()
     sut.to('a->b').from('a').to('b').do(() => {})
     sut.to('b->a').from('b').to('a').do(() => {})
 
@@ -179,7 +178,7 @@ describe('when the start and the target are the same', () => {
 })
 
 describe('when a navigation loops back to its own state', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->a').from('a').to('a').do(() => {})
   sut.to('a->b').from('a').to('b').do(() => {})
 
@@ -190,7 +189,7 @@ describe('when a navigation loops back to its own state', () => {
 })
 
 describe('when two navigations connect the same pair of states', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b (1)').from('a').to('b').do(() => {})
   sut.to('a->b (2)').from('a').to('b').do(() => {})
 
@@ -201,7 +200,7 @@ describe('when two navigations connect the same pair of states', () => {
 })
 
 describe('when a path would need the same navigation twice', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b').from('a').to('b').do(() => {})
   sut.to('b->a').from('b').to('a').do(() => {})
 
@@ -212,7 +211,7 @@ describe('when a path would need the same navigation twice', () => {
 })
 
 describe('when expectations make the shorter route have more steps', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->c').from('a').to('c').do(() => {})
   sut.to('a->b').from('a').to('b').do(() => {})
   sut.to('b->c').from('b').to('c').do(() => {})
@@ -229,7 +228,7 @@ describe('when expectations make the shorter route have more steps', () => {
 })
 
 describe('when planState changes over several navigations', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b').from('a').to('b', s => s.number += 1).do(() => {})
   sut.to('b->c').from('b').to('c', s => s.number += 1).do(() => {})
   sut.to('c->d').from('c', s => s.number === 2).to('d').do(() => {})
@@ -241,7 +240,7 @@ describe('when planState changes over several navigations', () => {
 })
 
 describe('when sibling branches change planState differently', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b').from('a').to('b', s => s.number = 1).do(() => {})
   sut.to('a->c').from('a').to('c', s => s.number = 2).do(() => {})
   sut.to('b->d').from('b', s => s.number === 1).to('d').do(() => {})
@@ -256,7 +255,7 @@ describe('when sibling branches change planState differently', () => {
 describe('when planState holds a nested value', () => {
   type TagPlanState = { tags: string[] }
 
-  var sut = new FluentStuff<TagPlanState, UserState>()
+  var sut = new Fluent<TagPlanState, UserState>()
   sut.to('a->b').from('a').to('b', s => s.tags.push('b')).do(() => {})
   sut.to('a->c').from('a').to('c', s => s.tags.push('c')).do(() => {})
   sut.to('b->d').from('b', s => s.tags.join() === 'b').to('d').do(() => {})
@@ -269,7 +268,7 @@ describe('when planState holds a nested value', () => {
 })
 
 describe('when beforeAll expectations use planState', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b').from('a').to('b', s => s.number = 9).do(() => {})
   sut.to('keep').beforeAll(s => s.number === 0).do(() => {})
   sut.to('drop').beforeAll(s => s.number === 9).do(() => {})
@@ -282,7 +281,7 @@ describe('when beforeAll expectations use planState', () => {
 })
 
 describe('when afterAll expectations use planState', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b').from('a').to('b', s => s.number = 9).do(() => {})
   sut.to('keep').afterAll(s => s.number === 9).do(() => {})
   sut.to('drop').afterAll(s => s.number === 0).do(() => {})
@@ -299,7 +298,7 @@ describe('when finally callbacks are registered', () => {
   const whenNine = () => {}
   const whenZero = () => {}
 
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b').from('a').to('b', s => s.number = 9).do(() => {})
   sut.finally(always)
   sut.finally(whenNine, s => s.number === 9)
@@ -313,7 +312,7 @@ describe('when finally callbacks are registered', () => {
 })
 
 describe('when no finally callbacks are registered', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b').from('a').to('b').do(() => {})
 
   it('returns an empty list', () => {
@@ -323,7 +322,7 @@ describe('when no finally callbacks are registered', () => {
 })
 
 describe('when expectations apply to the starting state', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b').from('a').to('b').do(() => {})
   sut.beforeExiting('a').do(() => {})
   sut.afterExiting('a').do(() => {})
@@ -336,7 +335,7 @@ describe('when expectations apply to the starting state', () => {
 })
 
 describe('when several expectations apply at the same point', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b').from('a').to('b').do(() => {})
   sut.to('enter 1').beforeEntering('b').do(() => {})
   sut.to('enter 2').beforeEntering('b').do(() => {})
@@ -350,7 +349,7 @@ describe('when several expectations apply at the same point', () => {
 })
 
 describe('when a navigation has no name', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.toNavigate().from('a').to('b').do(() => {})
   sut.toNavigate().from('b').to('c').do(() => {})
   sut.beforeEntering('b').do(() => {})
@@ -368,7 +367,7 @@ describe('when a navigation has no name', () => {
 })
 
 describe('when a fact has no usable name', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.toNavigate().from('a').to('b').do(() => {})
   sut.to('').beforeEntering('b').do(() => {})
 
@@ -380,7 +379,7 @@ describe('when a fact has no usable name', () => {
 })
 
 describe('when the target still has unused navigations', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b').from('a').to('b').do(() => {})
   sut.to('b->c').from('b').to('c').do(() => {})
 
@@ -391,7 +390,7 @@ describe('when the target still has unused navigations', () => {
 })
 
 describe('when every route to the target carries on past it', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b').from('a').to('b').do(() => {})
   sut.to('b->c').from('b').to('c').do(() => {})
   sut.to('c->b').from('c').to('b').do(() => {})
@@ -403,7 +402,7 @@ describe('when every route to the target carries on past it', () => {
 })
 
 describe('when no start is found but beforeAll expectations exist', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b').from('a').to('b').do(() => {})
   sut.beforeAll().do(() => {})
   sut.afterAll().do(() => {})
@@ -415,7 +414,7 @@ describe('when no start is found but beforeAll expectations exist', () => {
 })
 
 describe('when planState excludes every navigation out of the start', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b').from('a', s => s.number === 99).to('b').do(() => {})
   sut.beforeAll().do(() => {})
 

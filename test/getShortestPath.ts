@@ -1,13 +1,12 @@
 import assert from 'assert/strict'
 import { describe, it } from 'node:test'
-import { FluentStuff } from "../src/fluent.ts"
-import { getShortestPath, newFacts } from "../src/theseus.ts"
+import { getShortestPath, newFacts, Fluent } from "../src/index.ts"
 
 type PlanState = { number: number }
 
 type UserState = { strings: string[] }
 
-const addChain = (sut: FluentStuff<PlanState, UserState>, states: string[]) => {
+const addChain = (sut: Fluent<PlanState, UserState>, states: string[]) => {
   for (let i = 0; i < states.length - 1; i++) {
     sut.to(`${states[i]}->${states[i + 1]}`).from(states[i]).to(states[i + 1]).do(() => {})
   }
@@ -21,7 +20,7 @@ describe('when there are no facts at all', () => {
 })
 
 describe('when no start is found', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b').from('a').to('b').do(() => {})
 
   it('returns nothing', () => {
@@ -31,7 +30,7 @@ describe('when no start is found', () => {
 })
 
 describe('when no target is found', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b').from('a').to('b').do(() => {})
 
   it('returns nothing', () => {
@@ -41,7 +40,7 @@ describe('when no target is found', () => {
 })
 
 describe('when only one path exists', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b').from('a').to('b').do(() => {})
   sut.to('b->c').from('b').to('c').do(() => {})
 
@@ -52,7 +51,7 @@ describe('when only one path exists', () => {
 })
 
 describe('when several paths exist', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b').from('a').to('b').do(() => {})
   sut.to('b->c').from('b').to('c').do(() => {})
   sut.to('a->c').from('a').to('c').do(() => {})
@@ -64,7 +63,7 @@ describe('when several paths exist', () => {
 })
 
 describe('when no target is specified', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b').from('a').to('b').do(() => {})
   sut.to('b->c').from('b').to('c').do(() => {})
   sut.to('a->c').from('a').to('c').do(() => {})
@@ -76,7 +75,7 @@ describe('when no target is specified', () => {
 })
 
 describe('when expectations are involved', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->c').from('a').to('c').do(() => {})
   sut.to('a->b').from('a').to('b').do(() => {})
   sut.to('b->c').from('b').to('c').do(() => {})
@@ -90,7 +89,7 @@ describe('when expectations are involved', () => {
 })
 
 describe('when navigation uses planState', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b').from('a').to('b', s => s.number = 1).do(() => {})
   sut.to('b3->c').from('b', s => s.number === 3).to('c').do(() => {})
   sut.to('b1->c').from('b', s => s.number === 1).to('c').do(() => {})
@@ -104,7 +103,7 @@ describe('when navigation uses planState', () => {
 describe('when finally callbacks are registered', () => {
   const always = () => {}
 
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   sut.to('a->b').from('a').to('b').do(() => {})
   sut.finally(always)
 
@@ -115,7 +114,7 @@ describe('when finally callbacks are registered', () => {
 })
 
 describe('when one path has nine steps and another has ten', () => {
-  var sut = new FluentStuff<PlanState, UserState>()
+  var sut = new Fluent<PlanState, UserState>()
   addChain(sut, ['a', 's1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 'z']) // 9 navigations
   addChain(sut, ['a', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9', 'z']) // 10 navigations
 

@@ -1,8 +1,8 @@
-import { type ExpectationConfig, type Facts, type StepFn, newFacts } from "./theseus.ts"
+import { type ExpectationConfig, type Facts, type StepFn, newFacts } from "./core.ts"
 
 const defaultExpectationConfig = (): ExpectationConfig => ({ continueAfterError: false })
 
-export class FluentStuff<TPlanState, TUserState> {
+export class Fluent<TPlanState, TUserState> {
   facts: Facts<TPlanState, TUserState>
 
   constructor(existingFacts?: Facts<TPlanState, TUserState>) {
@@ -15,7 +15,7 @@ export class FluentStuff<TPlanState, TUserState> {
       beforeAll(ifPlanState?: (state: TPlanState) => boolean) {
         return {
           do(fn: StepFn<TPlanState, TUserState>, toPlanState?: (state: TPlanState) => void) {
-            const fact = { name, at: '* before all *', ifPlanState, do: fn, config: defaultExpectationConfig() }
+            const fact = { name, at: '* before all *', ifPlanState, toPlanState, do: fn, config: defaultExpectationConfig() }
             facts.beforeAll.push(fact)
             return {
               with(config: (config: ExpectationConfig) => void) {
@@ -29,7 +29,7 @@ export class FluentStuff<TPlanState, TUserState> {
       afterAll(ifPlanState?: (state: TPlanState) => boolean) {
         return {
           do(fn: StepFn<TPlanState, TUserState>, toPlanState?: (state: TPlanState) => void) {
-            const fact = { name, at: '* after all *', ifPlanState, do: fn, config: defaultExpectationConfig() }
+            const fact = { name, at: '* after all *', ifPlanState, toPlanState, do: fn, config: defaultExpectationConfig() }
             facts.afterAll.push(fact)
             return {
               with(config: (config: ExpectationConfig) => void) {
@@ -56,7 +56,7 @@ export class FluentStuff<TPlanState, TUserState> {
       before(navigation: string, ifPlanState?: (state: TPlanState) => boolean) {
         return {
           do(fn: StepFn<TPlanState, TUserState>, toPlanState?: (state: TPlanState) => void) {
-            const fact = { name, at: navigation, ifPlanState, do: fn, config: defaultExpectationConfig() }
+            const fact = { name, at: navigation, ifPlanState, toPlanState, do: fn, config: defaultExpectationConfig() }
             facts.before.push(fact)
             return {
               with(config: (config: ExpectationConfig) => void) {
@@ -70,7 +70,7 @@ export class FluentStuff<TPlanState, TUserState> {
       beforeEntering(state: string, ifPlanState?: (state: TPlanState) => boolean) {
         return {
           do(fn: StepFn<TPlanState, TUserState>, toPlanState?: (state: TPlanState) => void) {
-            const fact = { name, at: state, ifPlanState, do: fn, config: defaultExpectationConfig() }
+            const fact = { name, at: state, ifPlanState, toPlanState, do: fn, config: defaultExpectationConfig() }
             facts.beforeEntering.push(fact)
             return {
               with(config: (config: ExpectationConfig) => void) {
@@ -84,7 +84,7 @@ export class FluentStuff<TPlanState, TUserState> {
       beforeExiting(state: string, ifPlanState?: (state: TPlanState) => boolean) {
         return {
           do(fn: StepFn<TPlanState, TUserState>, toPlanState?: (state: TPlanState) => void) {
-            const fact = { name, at: state, ifPlanState, do: fn, config: defaultExpectationConfig() }
+            const fact = { name, at: state, ifPlanState, toPlanState, do: fn, config: defaultExpectationConfig() }
             facts.beforeExiting.push(fact)
             return {
               with(config: (config: ExpectationConfig) => void) {
@@ -98,7 +98,7 @@ export class FluentStuff<TPlanState, TUserState> {
       after(navigation: string, ifPlanState?: (state: TPlanState) => boolean) {
         return {
           do(fn: StepFn<TPlanState, TUserState>, toPlanState?: (state: TPlanState) => void) {
-            const fact = { name, at: navigation, ifPlanState, do: fn, config: defaultExpectationConfig() }
+            const fact = { name, at: navigation, ifPlanState, toPlanState, do: fn, config: defaultExpectationConfig() }
             facts.after.push(fact)
             return {
               with(config: (config: ExpectationConfig) => void) {
@@ -112,7 +112,7 @@ export class FluentStuff<TPlanState, TUserState> {
       afterEntering(state: string, ifPlanState?: (state: TPlanState) => boolean) {
         return {
           do(fn: StepFn<TPlanState, TUserState>, toPlanState?: (state: TPlanState) => void) {
-            const fact = { name, at: state, ifPlanState, do: fn, config: defaultExpectationConfig() }
+            const fact = { name, at: state, ifPlanState, toPlanState, do: fn, config: defaultExpectationConfig() }
             facts.afterEntering.push(fact)
             return {
               with(config: (config: ExpectationConfig) => void) {
@@ -126,7 +126,7 @@ export class FluentStuff<TPlanState, TUserState> {
       afterExiting(state: string, ifPlanState?: (state: TPlanState) => boolean) {
         return {
           do(fn: StepFn<TPlanState, TUserState>, toPlanState?: (state: TPlanState) => void) {
-            const fact = { name, at: state, ifPlanState, do: fn, config: defaultExpectationConfig() }
+            const fact = { name, at: state, ifPlanState, toPlanState, do: fn, config: defaultExpectationConfig() }
             facts.afterExiting.push(fact)
             return {
               with(config: (config: ExpectationConfig) => void) {
@@ -161,7 +161,7 @@ export class FluentStuff<TPlanState, TUserState> {
     const facts = this.facts
     return {
       do(fn: StepFn<TPlanState, TUserState>, toPlanState?: (state: TPlanState) => void) {
-        const fact = { name: '* before all *', at: '* before all *', ifPlanState, do: fn, config: defaultExpectationConfig() }
+        const fact = { name: '* before all *', at: '* before all *', ifPlanState, toPlanState, do: fn, config: defaultExpectationConfig() }
         facts.beforeAll.push(fact)
         return {
           with(config: (config: ExpectationConfig) => void) {
@@ -176,7 +176,7 @@ export class FluentStuff<TPlanState, TUserState> {
     const facts = this.facts
     return {
       do(fn: StepFn<TPlanState, TUserState>, toPlanState?: (state: TPlanState) => void) {
-        const fact = { name: '* after all *', at: '* after all *', ifPlanState, do: fn, config: defaultExpectationConfig() }
+        const fact = { name: '* after all *', at: '* after all *', ifPlanState, toPlanState, do: fn, config: defaultExpectationConfig() }
         facts.afterAll.push(fact)
         return {
           with(config: (config: ExpectationConfig) => void) {
@@ -191,7 +191,7 @@ export class FluentStuff<TPlanState, TUserState> {
     const facts = this.facts
     return {
       do(fn: StepFn<TPlanState, TUserState>, toPlanState?: (state: TPlanState) => void) {
-        const fact = { name: `before ${navigation}`, at: navigation, ifPlanState, do: fn, config: defaultExpectationConfig() }
+        const fact = { name: `before ${navigation}`, at: navigation, ifPlanState, toPlanState, do: fn, config: defaultExpectationConfig() }
         facts.before.push(fact)
         return {
           with(config: (config: ExpectationConfig) => void) {
@@ -206,7 +206,7 @@ export class FluentStuff<TPlanState, TUserState> {
     const facts = this.facts
     return {
       do(fn: StepFn<TPlanState, TUserState>, toPlanState?: (state: TPlanState) => void) {
-        const fact = { name: `before entering ${state}`, at: state, ifPlanState, do: fn, config: defaultExpectationConfig() }
+        const fact = { name: `before entering ${state}`, at: state, ifPlanState, toPlanState, do: fn, config: defaultExpectationConfig() }
         facts.beforeEntering.push(fact)
         return {
           with(config: (config: ExpectationConfig) => void) {
@@ -221,7 +221,7 @@ export class FluentStuff<TPlanState, TUserState> {
     const facts = this.facts
     return {
       do(fn: StepFn<TPlanState, TUserState>, toPlanState?: (state: TPlanState) => void) {
-        const fact = { name: `before exiting ${state}`, at: state, ifPlanState, do: fn, config: defaultExpectationConfig() }
+        const fact = { name: `before exiting ${state}`, at: state, ifPlanState, toPlanState, do: fn, config: defaultExpectationConfig() }
         facts.beforeExiting.push(fact)
         return {
           with(config: (config: ExpectationConfig) => void) {
@@ -236,7 +236,7 @@ export class FluentStuff<TPlanState, TUserState> {
     const facts = this.facts
     return {
       do(fn: StepFn<TPlanState, TUserState>, toPlanState?: (state: TPlanState) => void) {
-        const fact = { name: `after ${navigation}`, at: navigation, ifPlanState, do: fn, config: defaultExpectationConfig() }
+        const fact = { name: `after ${navigation}`, at: navigation, ifPlanState, toPlanState, do: fn, config: defaultExpectationConfig() }
         facts.after.push(fact)
         return {
           with(config: (config: ExpectationConfig) => void) {
@@ -251,7 +251,7 @@ export class FluentStuff<TPlanState, TUserState> {
     const facts = this.facts
     return {
       do(fn: StepFn<TPlanState, TUserState>, toPlanState?: (state: TPlanState) => void) {
-        const fact = { name: `after entering ${state}`, at: state, ifPlanState, do: fn, config: defaultExpectationConfig() }
+        const fact = { name: `after entering ${state}`, at: state, ifPlanState, toPlanState, do: fn, config: defaultExpectationConfig() }
         facts.afterEntering.push(fact)
         return {
           with(config: (config: ExpectationConfig) => void) {
@@ -266,7 +266,7 @@ export class FluentStuff<TPlanState, TUserState> {
     const facts = this.facts
     return {
       do(fn: StepFn<TPlanState, TUserState>, toPlanState?: (state: TPlanState) => void) {
-        const fact = { name: `after exiting ${state}`, at: state, ifPlanState, do: fn, config: defaultExpectationConfig() }
+        const fact = { name: `after exiting ${state}`, at: state, ifPlanState, toPlanState, do: fn, config: defaultExpectationConfig() }
         facts.afterExiting.push(fact)
         return {
           with(config: (config: ExpectationConfig) => void) {
@@ -277,7 +277,7 @@ export class FluentStuff<TPlanState, TUserState> {
     }
   }
 
-  add(sut: FluentStuff<TPlanState, TUserState>) {
+  add(sut: Fluent<TPlanState, TUserState>) {
     this.facts.after.push(...sut.facts.after)
     this.facts.afterAll.push(...sut.facts.afterAll)
     this.facts.afterEntering.push(...sut.facts.afterEntering)

@@ -1,6 +1,6 @@
-import { FluentStuff } from "../../src/fluent"
+import { Fluent } from "../../src/fluent"
 import { toGraphvizInput } from "../../src/graphviz"
-import { Facts } from "../../src/theseus"
+import { Facts } from "../../src/core"
 
 type PlanState = { }
 
@@ -46,7 +46,7 @@ const facts: Facts<PlanState, UserState> = {
   ]
 }
 
-const sut = new FluentStuff(facts)
+const sut = new Fluent(facts)
 
 sut.toNavigate().from('l2').to('e').do(state => {
   state.log.push('l2 to e')

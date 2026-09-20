@@ -1,6 +1,7 @@
 import { remote } from 'webdriverio'
-import { FluentStuff } from 'theseus/fluent'
-import { getAllPaths, runPaths } from 'theseus'
+import { Fluent } from '../../src/fluent'
+import { getAllPaths } from '../../src/core'
+import { runPaths } from '../../src/runner'
 
 type PlanState = { }
 
@@ -11,7 +12,7 @@ type UserState = {
   }
 }
 
-const sut = new FluentStuff<PlanState, UserState>()
+const sut = new Fluent<PlanState, UserState>()
 
 sut.toNavigate().from('start').to('home').do(async state => {
   await state.browser.url('https://boardgamegeek.com/')

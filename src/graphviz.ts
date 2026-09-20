@@ -1,5 +1,5 @@
 import { type PathLike } from "fs"
-import { type Facts, type NavigationFact } from "./theseus.ts"
+import { type Facts, type NavigationFact } from "./core.ts"
 import { type FileHandle, writeFile } from 'fs/promises'
 
 const describeEdge = <TPlanState, TUserState>(n: NavigationFact<TPlanState, TUserState>) => `  "${n.from}" -> "${n.to}"` + (n.name ? ` [label="${n.name}"]` : "")

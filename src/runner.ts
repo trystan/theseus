@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto"
-import { Fact, Path, Context } from "./theseus"
-import { DefaultOutput } from "./defaultOutput";
+import type { Fact, Path, Context } from "./core.ts"
+import { DefaultOutput } from "./defaultOutput.ts";
 
 export type StateConstructor<TUserState> = () => Promise<TUserState>
 
@@ -60,23 +60,16 @@ const inParallel = (maxConcurrency: number, getNextPromise: () => Promise<void> 
     }
 })
 
-export type RunStats = {
-  durations: number[],
-  successCount: number,
-  failureCount: number,
-}
-
 export type Output = {
   beforeAll<TPlanState, TUserState>(paths: Path<TPlanState, TUserState>[], states: StateConstructor<TUserState>[], options: { concurrency: number; }): void
-  beforeRun<TPlanState, TUserState>(runId: string, path: Path<TPlanState, TUserState>, state: TUserState): void
-  afterRun<TPlanState, TUserState>(runId: string, path: Path<TPlanState, TUserState>, state: TUserState): void
-  beforeStep<TPlanState, TUserState>(runId: string, step: Fact<TPlanState, TUserState>, state: TUserState, context: Context<TPlanState, TUserState>): void
-  afterStep<TPlanState, TUserState>(runId: string, step: Fact<TPlanState, TUserState>, state: TUserState, context: Context<TPlanState, TUserState>, error: Error | null): void
-  afterAll(stats: RunStats): void
+  beforeRun<TPlanState, TUserState>(runId: string, path: Path<TPlanState, TUserState>): void
+  afterRun<TPlanState, TUserState>(runId: string, path: Path<TPlanState, TUserState>): void
+  beforeStep<TPlanState, TUserState>(runId: string, step: Fact<TPlanState, TUserState>, context: Context<TPlanState, TUserState>): void
+  afterStep<TPlanState, TUserState>(runId: string, step: Fact<TPlanState, TUserState>, context: Context<TPlanState, TUserState>, error: Error | null): void
+  afterAll(): void
 }
 
 class PathRunner<TPlanState, TUserState> {
-  stats: RunStats = { durations: [], successCount: 0, failureCount: 0 }
   output: Output
 
   constructor(output: Output = new DefaultOutput()) {
@@ -85,24 +78,19 @@ class PathRunner<TPlanState, TUserState> {
 
   runStep = async (id: string, step: Fact<TPlanState, TUserState>, state: TUserState, context: Context<TPlanState, TUserState>): Promise<boolean> => {
     try {
-      this.output.beforeStep(id, step, state, context)
+      this.output.beforeStep(id, step, context)
 
       await step.do(state, context)
       
-      this.output.afterStep(id, step, state, context, null)
-
-      this.stats.successCount++
+      this.output.afterStep(id, step, context, null)
 
       return true
     } catch (error) {
       if (error instanceof Error) {
-        this.output.afterStep(id, step, state, context, error)
+        this.output.afterStep(id, step, context, error)
       } else {
         console.error(error)
       }
-      
-
-      this.stats.failureCount++
 
       if ('config' in step && step.config?.continueAfterError) {
         return true
@@ -115,13 +103,13 @@ class PathRunner<TPlanState, TUserState> {
   runPath = async (path: Path<TPlanState, TUserState>, userState: TUserState): Promise<void> => {
     const id = randomUUID()
 
-    this.output.beforeRun(id, path, userState)
+    this.output.beforeRun(id, path)
     let keepGoing = true
     for (let index = 0; keepGoing && index < path.steps.length; index++) {
       keepGoing = await this.runStep(id, path.steps[index], userState, { path, index})
     }
     path.finally.forEach(async fn => await fn.do(userState, { path, index: -1 }))
-    this.output.afterRun(id, path, userState)
+    this.output.afterRun(id, path)
   }
 
   runPaths = async (paths: Path<TPlanState, TUserState>[],
@@ -143,7 +131,7 @@ class PathRunner<TPlanState, TUserState> {
 
     await inParallel(options.concurrency, getNextRun)
 
-    this.output.afterAll(this.stats)
+    this.output.afterAll()
   }
 }
 
